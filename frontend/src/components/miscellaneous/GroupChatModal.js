@@ -13,6 +13,7 @@ import {
   useToast,
   Box,
 } from "@chakra-ui/react";
+import { CheckIcon } from "@chakra-ui/icons";
 import axios from "axios";
 import { useState } from "react";
 import { ChatState } from "../../Context/ChatProvider";
@@ -144,14 +145,14 @@ const GroupChatModal = ({ children }) => {
           <ModalBody d="flex" flexDir="column" alignItems="center">
             <FormControl>
               <Input
-                placeholder="Chat Name"
+                placeholder="Group Name"
                 mb={3}
                 onChange={(e) => setGroupChatName(e.target.value)}
               />
             </FormControl>
             <FormControl>
               <Input
-                placeholder="Add Users"
+                placeholder="Search for a Name or Username"
                 mb={1}
                 onChange={(e) => handleSearch(e.target.value)}
               />
@@ -181,7 +182,7 @@ const GroupChatModal = ({ children }) => {
           </ModalBody>
           <ModalFooter>
             <Button onClick={handleSubmit} colorScheme="blue">
-              Create Chat
+              <CheckIcon />
             </Button>
           </ModalFooter>
         </ModalContent>

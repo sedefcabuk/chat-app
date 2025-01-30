@@ -144,7 +144,7 @@ const GroupChatModal = ({ children }) => {
           <ModalBody d="flex" flexDir="column" alignItems="center">
             <FormControl>
               <Input
-                placeholder="Chat Name"
+                placeholder="Group Name"
                 mb={3}
                 onChange={(e) => setGroupChatName(e.target.value)}
               />
@@ -181,7 +181,7 @@ const GroupChatModal = ({ children }) => {
           </ModalBody>
           <ModalFooter>
             <Button onClick={handleSubmit} colorScheme="blue">
-              Create Chat
+              <CheckIcon />
             </Button>
           </ModalFooter>
         </ModalContent>
