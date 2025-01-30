@@ -107,8 +107,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault(); // Yeni satır eklenmesini engeller
-      sendMessage(); // Mesaj gönder
+      e.preventDefault();
+      sendMessage();
     }
   };
 
@@ -132,7 +132,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   useEffect(() => {
     socket.on("message received", (newMessageReceived) => {
       if (
-        !selectedChatCompare || // if chat is not selected or doesn't match current chat
+        !selectedChatCompare ||
         selectedChatCompare._id !== newMessageReceived.chat._id
       ) {
         if (!notification.includes(newMessageReceived)) {
@@ -249,14 +249,14 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 <Input
                   variant="filled"
                   bg="#E0E0E0"
-                  placeholder="Enter a message.."
+                  placeholder="Type a message"
                   value={newMessage}
                   onChange={typingHandler}
-                  onKeyDown={handleKeyPress} // Enter tuşuna basıldığında mesaj gönderilecek
+                  onKeyDown={handleKeyPress}
                 />
                 <IconButton
-                  icon={<MdSend />} // Paper plane ikonu
-                  onClick={sendMessage} // Mesaj gönderme
+                  icon={<MdSend />}
+                  onClick={sendMessage}
                   colorScheme="blue"
                   aria-label="Send Message"
                 />

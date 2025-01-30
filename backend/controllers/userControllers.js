@@ -27,7 +27,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   if (!name || !userName || !email || !password) {
     res.status(400);
-    throw new Error("Please Enter all the Feilds");
+    throw new Error("Please Enter all the Fields");
   }
 
   const userNameExists = await User.findOne({ userName });
