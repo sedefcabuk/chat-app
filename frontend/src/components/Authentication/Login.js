@@ -7,6 +7,7 @@ import axios from "axios";
 import { useToast } from "@chakra-ui/react";
 import { useHistory } from "react-router-dom";
 import { ChatState } from "../../Context/ChatProvider";
+import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
   const [show, setShow] = useState(false);
@@ -92,7 +93,7 @@ const Login = () => {
           />
           <InputRightElement width="4.5rem">
             <Button h="1.75rem" size="sm" onClick={handleClick}>
-              {show ? "Hide" : "Show"}
+              {show ? <EyeOff size={16} /> : <Eye size={16} />}
             </Button>
           </InputRightElement>
         </InputGroup>

@@ -6,6 +6,7 @@ import { useToast } from "@chakra-ui/toast";
 import axios from "axios";
 import { useState } from "react";
 import { useHistory } from "react-router";
+import { Eye, EyeOff } from "lucide-react";
 
 const Signup = () => {
   const [show, setShow] = useState(false);
@@ -165,7 +166,7 @@ const Signup = () => {
           />
           <InputRightElement width="4.5rem">
             <Button h="1.75rem" size="sm" onClick={handleClick}>
-              {show ? "Hide" : "Show"}
+              {show ? <EyeOff size={16} /> : <Eye size={16} />}
             </Button>
           </InputRightElement>
         </InputGroup>
@@ -180,7 +181,7 @@ const Signup = () => {
           />
           <InputRightElement width="4.5rem">
             <Button h="1.75rem" size="sm" onClick={handleClick}>
-              {show ? "Hide" : "Show"}
+              {show ? <EyeOff size={16} /> : <Eye size={16} />}
             </Button>
           </InputRightElement>
         </InputGroup>
