@@ -25,7 +25,7 @@ import axios from "axios";
 import { useToast } from "@chakra-ui/toast";
 import ChatLoading from "../ChatLoading";
 import { Spinner } from "@chakra-ui/spinner";
-import ProfileModal from "./ProfileModal";
+import UpdateProfileModal from "./UpdateProfileModal";
 import NotificationBadge from "react-notification-badge";
 import { Effect } from "react-notification-badge";
 import { getSender } from "../../config/ChatLogics";
@@ -125,7 +125,7 @@ function SideDrawer() {
   return (
     <>
       <Box
-        d="flex"
+        display="flex"
         justifyContent="space-between"
         alignItems="center"
         bg="white"
@@ -180,9 +180,9 @@ function SideDrawer() {
               />
             </MenuButton>
             <MenuList>
-              <ProfileModal user={user}>
+              <UpdateProfileModal user={user}>
                 <MenuItem>Profile</MenuItem>{" "}
-              </ProfileModal>
+              </UpdateProfileModal>
               <MenuDivider />
               <MenuItem onClick={logoutHandler}>Logout</MenuItem>
             </MenuList>
@@ -195,7 +195,7 @@ function SideDrawer() {
         <DrawerContent>
           <DrawerHeader borderBottomWidth="1px">Search Users</DrawerHeader>
           <DrawerBody>
-            <Box d="flex" pb={2}>
+            <Box display="flex" pb={2}>
               <Input
                 placeholder="Search by name or username"
                 mr={2}
@@ -215,7 +215,7 @@ function SideDrawer() {
                 />
               ))
             )}
-            {loadingChat && <Spinner ml="auto" d="flex" />}
+            {loadingChat && <Spinner ml="auto" display="flex" />}
           </DrawerBody>
         </DrawerContent>
       </Drawer>

@@ -14,7 +14,7 @@ import {
   Image,
 } from "@chakra-ui/react";
 
-const ProfileModal = ({ user, children }) => {
+const UpdateProfileModal = ({ user, children }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
@@ -52,6 +52,12 @@ const ProfileModal = ({ user, children }) => {
               src={user.pic}
               alt={user.name}
             />
+            <Text
+              fontSize={{ base: "28px", md: "30px" }}
+              fontFamily="Work sans"
+            >
+              Email: {user.email}
+            </Text>
           </ModalBody>
           <ModalFooter>
             <Button onClick={onClose}>Close</Button>
@@ -62,4 +68,4 @@ const ProfileModal = ({ user, children }) => {
   );
 };
 
-export default ProfileModal;
+export default UpdateProfileModal;
