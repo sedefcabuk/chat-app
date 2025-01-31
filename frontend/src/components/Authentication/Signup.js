@@ -37,6 +37,7 @@ const Signup = () => {
       return;
     }
     if (password !== confirmpassword) {
+      setPicLoading(true);
       toast({
         title: "Passwords Do Not Match",
         status: "warning",
@@ -44,6 +45,7 @@ const Signup = () => {
         isClosable: true,
         position: "bottom",
       });
+      setPicLoading(false);
       return;
     }
     console.log(name, userName, email, password, pic);
@@ -133,6 +135,11 @@ const Signup = () => {
       return;
     }
   };
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      submitHandler();
+    }
+  };
 
   return (
     <VStack spacing="5px">
@@ -141,6 +148,7 @@ const Signup = () => {
         <Input
           placeholder="Enter Your Name"
           onChange={(e) => setName(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
       </FormControl>
       <FormControl id="userName" isRequired>
@@ -148,6 +156,7 @@ const Signup = () => {
         <Input
           placeholder="Enter Your Username"
           onChange={(e) => setUserName(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
       </FormControl>
       <FormControl id="email" isRequired>
@@ -156,6 +165,7 @@ const Signup = () => {
           type="email"
           placeholder="Enter Your Email Address"
           onChange={(e) => setEmail(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
       </FormControl>
       <FormControl id="password" isRequired>
@@ -165,6 +175,7 @@ const Signup = () => {
             type={show ? "text" : "password"}
             placeholder="Enter Password"
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
           <InputRightElement width="4.5rem">
             <Button h="1.75rem" size="sm" onClick={handleClick}>
@@ -180,6 +191,7 @@ const Signup = () => {
             type={show ? "text" : "password"}
             placeholder="Confirm password"
             onChange={(e) => setConfirmpassword(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
           <InputRightElement width="4.5rem">
             <Button h="1.75rem" size="sm" onClick={handleClick}>
