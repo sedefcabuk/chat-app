@@ -17,7 +17,6 @@ const MyChats = ({ fetchAgain }) => {
   const toast = useToast();
 
   const fetchChats = async () => {
-
     try {
       const config = {
         headers: {
@@ -107,7 +106,12 @@ const MyChats = ({ fetchAgain }) => {
                 </Text>
                 {chat.latestMessage && (
                   <Text fontSize="xs">
-                    <b>{chat.latestMessage.sender.name} : </b>
+                    <b>
+                      {chat.latestMessage.sender.name === loggedUser.name
+                        ? "You"
+                        : chat.latestMessage.sender.name}{" "}
+                      :{" "}
+                    </b>
                     {chat.latestMessage.content.length > 50
                       ? chat.latestMessage.content.substring(0, 51) + "..."
                       : chat.latestMessage.content}

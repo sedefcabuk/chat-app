@@ -14,9 +14,9 @@ import animationData from "../animations/typing.json";
 import io from "socket.io-client";
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
-import { MdSend } from "react-icons/md"; 
+import { MdSend } from "react-icons/md";
 
-const ENDPOINT = "http://localhost:5000"; 
+const ENDPOINT = "http://localhost:5000";
 var socket, selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
@@ -229,11 +229,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               </div>
             )}
 
-            <FormControl
-              id="first-name"
-              isRequired
-              mt={3}
-            >
+            <FormControl id="first-name" isRequired mt={3}>
               {istyping ? (
                 <div>
                   <Lottie
