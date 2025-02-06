@@ -20,7 +20,7 @@ import { Tooltip } from "@chakra-ui/tooltip";
 import { BellIcon, ChevronDownIcon } from "@chakra-ui/icons";
 import { Avatar } from "@chakra-ui/avatar";
 import { useHistory } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useToast } from "@chakra-ui/toast";
 import ChatLoading from "../ChatLoading";
@@ -56,15 +56,9 @@ function SideDrawer() {
     history.push("/");
   };
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!search) {
-      toast({
-        title: "Please Enter something in search",
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-        position: "top-left",
-      });
+      setSearchResult([]);
       return;
     }
 
@@ -78,9 +72,8 @@ function SideDrawer() {
       };
 
       const { data } = await axios.get(`/api/user?search=${search}`, config);
-
-      setLoading(false);
       setSearchResult(data);
+      setLoading(false);
     } catch (error) {
       toast({
         title: "Error Occured!",
@@ -90,9 +83,20 @@ function SideDrawer() {
         isClosable: true,
         position: "bottom-left",
       });
+      setLoading(false);
     }
-  };
+  }, [search, user.token, toast]);
+  useEffect(() => {
+    if (!search) {
+      setSearchResult([]);
+    } else {
+      const delayDebounceFn = setTimeout(() => {
+        handleSearch();
+      }, 500);
 
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [search, handleSearch]);
   const accessChat = async (userId) => {
     console.log(userId);
 

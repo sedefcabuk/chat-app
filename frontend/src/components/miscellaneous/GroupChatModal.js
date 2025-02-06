@@ -15,7 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { CheckIcon } from "@chakra-ui/icons";
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ChatState } from "../../Context/ChatProvider";
 import UserBadgeItem from "../userAvatar/UserBadgeItem";
 import UserListItem from "../userAvatar/UserListItem";
@@ -30,6 +30,11 @@ const GroupChatModal = ({ children }) => {
   const toast = useToast();
 
   const { user, chats, setChats } = ChatState();
+
+  const handleModalClose = () => {
+    setSearchResult([]);
+    onClose();
+  };
 
   const handleGroup = (userToAdd) => {
     if (selectedUsers.includes(userToAdd)) {
@@ -46,35 +51,37 @@ const GroupChatModal = ({ children }) => {
     setSelectedUsers([...selectedUsers, userToAdd]);
   };
 
-  const handleSearch = async (query) => {
-    setSearch(query);
-    if (!query) {
-      return;
-    }
+  const handleSearch = useCallback(
+    async (query) => {
+      setSearch(query);
+      if (!query) {
+        setSearchResult([]);
+        return;
+      }
 
-    try {
-      setLoading(true);
-      const config = {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
-      };
-      const { data } = await axios.get(`/api/user?search=${search}`, config);
-      console.log(data);
-      setLoading(false);
-      setSearchResult(data);
-    } catch (error) {
-      toast({
-        title: "Error Occured!",
-        description: "Failed to Load the Search Results",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom-left",
-      });
-    }
-  };
-
+      try {
+        setLoading(true);
+        const config = {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+          },
+        };
+        const { data } = await axios.get(`/api/user?search=${query}`, config);
+        setLoading(false);
+        setSearchResult(data);
+      } catch (error) {
+        toast({
+          title: "Error Occured!",
+          description: "Failed to Load the Search Results",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+          position: "bottom-left",
+        });
+      }
+    },
+    [user.token, toast]
+  );
   const handleDelete = (delUser) => {
     setSelectedUsers(selectedUsers.filter((sel) => sel._id !== delUser._id));
   };
@@ -125,12 +132,24 @@ const GroupChatModal = ({ children }) => {
       });
     }
   };
+  useEffect(() => {
+    if (isOpen) {
+      setSearchResult([]);
+    }
+  }, [isOpen]);
 
+  useEffect(() => {
+    if (!search) {
+      setSearchResult([]);
+    } else {
+      handleSearch(search);
+    }
+  }, [search, handleSearch]);
   return (
     <>
       <span onClick={onOpen}>{children}</span>
 
-      <Modal onClose={onClose} isOpen={isOpen} isCentered>
+      <Modal onClose={handleModalClose} isOpen={isOpen} isCentered>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader

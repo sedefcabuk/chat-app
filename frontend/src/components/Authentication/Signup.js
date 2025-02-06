@@ -23,11 +23,45 @@ const Signup = () => {
   const [pic, setPic] = useState();
   const [picLoading, setPicLoading] = useState(false);
 
+  const validateEmail = (email) => {
+    const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+    return regex.test(email);
+  };
+
+  const validatePassword = (password) => {
+    return password.length >= 8 && /\d/.test(password);
+  };
+
   const submitHandler = async () => {
     setPicLoading(true);
     if (!name || !userName || !email || !password || !confirmpassword) {
       toast({
         title: "Please Fill all the Feilds",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+      setPicLoading(false);
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      toast({
+        title: "Email should be in the following format: example@email.com",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+      setPicLoading(false);
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      toast({
+        title:
+          "Password must be at least 8 characters long and contain at least one number",
         status: "warning",
         duration: 5000,
         isClosable: true,
