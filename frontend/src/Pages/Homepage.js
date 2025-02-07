@@ -41,8 +41,8 @@ function Homepage() {
       <Box bg="white" w="100%" p={4} borderRadius="lg" borderWidth="1px">
         <Tabs isFitted variant="soft-rounded">
           <TabList mb="1em">
-            <Tab>Login</Tab>
-            <Tab>Sign Up</Tab>
+            <Tab>Log in</Tab>
+            <Tab>Sign up</Tab>
           </TabList>
           <TabPanels>
             <TabPanel>

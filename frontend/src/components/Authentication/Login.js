@@ -113,7 +113,7 @@ const Login = () => {
         onClick={submitHandler}
         isLoading={loading}
       >
-        Login
+        Log in
       </Button>
     </VStack>
   );

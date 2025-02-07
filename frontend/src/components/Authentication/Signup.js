@@ -250,7 +250,7 @@ const Signup = () => {
         onClick={submitHandler}
         isLoading={picLoading}
       >
-        Sign Up
+        Sign up
       </Button>
     </VStack>
   );
