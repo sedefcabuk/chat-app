@@ -8,12 +8,13 @@ import ChatLoading from "./ChatLoading";
 import GroupChatModal from "./miscellaneous/GroupChatModal";
 import { Button } from "@chakra-ui/react";
 import { ChatState } from "../Context/ChatProvider";
+import CryptoJS from "crypto-js"; // Şifre çözme için ekledik
+
+const SECRET_KEY = process.env.REACT_APP_SECRET_KEY; // .env'den almak daha güvenli olur
 
 const MyChats = ({ fetchAgain }) => {
   const [loggedUser, setLoggedUser] = useState();
-
   const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
-
   const toast = useToast();
 
   const fetchChats = async () => {
@@ -43,6 +44,21 @@ const MyChats = ({ fetchAgain }) => {
     fetchChats();
     // eslint-disable-next-line
   }, [fetchAgain]);
+
+  // Şifre Çözme Fonksiyonu
+  const decryptMessage = (ciphertext) => {
+    try {
+      if (!ciphertext || typeof ciphertext !== "string") return ciphertext; // Geçersiz veri ise direkt döndür
+
+      const bytes = CryptoJS.AES.decrypt(ciphertext, SECRET_KEY);
+      const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+
+      return decryptedText || ciphertext; // Eğer çözemezsek orijinal metni göster
+    } catch (error) {
+      console.error("Şifre çözme hatası:", error);
+      return ciphertext; // Hata olursa şifrelenmiş metni olduğu gibi göster
+    }
+  };
 
   return (
     <Box
@@ -112,9 +128,12 @@ const MyChats = ({ fetchAgain }) => {
                         : chat.latestMessage.sender.name}{" "}
                       :{" "}
                     </b>
-                    {chat.latestMessage.content.length > 50
-                      ? chat.latestMessage.content.substring(0, 51) + "..."
-                      : chat.latestMessage.content}
+                    {decryptMessage(chat.latestMessage.content).length > 50
+                      ? decryptMessage(chat.latestMessage.content).substring(
+                          0,
+                          51
+                        ) + "..."
+                      : decryptMessage(chat.latestMessage.content)}
                   </Text>
                 )}
               </Box>
