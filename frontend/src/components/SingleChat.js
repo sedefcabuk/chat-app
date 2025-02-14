@@ -111,10 +111,15 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         socket.emit("new message", data);
         setMessages([...messages, data]);
       } catch (error) {
+        let errorMessage = "Failed to send the message"; // Varsayılan hata mesajı
+        if (error.response && error.response.status === 403) {
+          errorMessage =
+            "Since you are no longer a member of this group, you cannot send messages to the group.";
+        }
+
         toast({
-          title: "Error Occured!",
-          description: "Failed to send the Message",
-          status: "error",
+          description: errorMessage,
+          status: "warning",
           duration: 5000,
           isClosable: true,
           position: "bottom",

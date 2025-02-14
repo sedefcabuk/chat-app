@@ -184,14 +184,24 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
         config
       );
 
-      user1._id === user._id ? setSelectedChat() : setSelectedChat(data);
+      if (user1._id === user._id) {
+        // Kendini çıkardıysa sohbeti kapat
+        setSelectedChat(null);
+      } else {
+        // Başkasını çıkardıysa, sadece `users` listesini güncelle
+        setSelectedChat({
+          ...selectedChat,
+          users: selectedChat.users.filter((u) => u._id !== user1._id),
+        });
+      }
+
       setFetchAgain(!fetchAgain);
       fetchMessages();
       setLoading(false);
     } catch (error) {
       toast({
         title: "Error Occured!",
-        description: error.response.data.message,
+        description: error.response?.data?.message || "An error occurred",
         status: "error",
         duration: 5000,
         isClosable: true,
