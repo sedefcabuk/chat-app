@@ -61,6 +61,10 @@ const fetchChats = asyncHandler(async (req, res) => {
         { users: req.user._id }, // Kullanıcı grupta varsa
         { [`removedUsers.${req.user._id}`]: { $exists: true } }, // Daha önce eklenip çıkarılmışsa
       ],
+      $or: [
+        { isGroupChat: true }, // Grup sohbetleri her zaman görünsün
+        { latestMessage: { $exists: true } }, // Bireysel sohbetlerde en az 1 mesaj olmalı
+      ],
     })
       .populate("users", "-password")
       .populate("groupAdmin", "-password")
