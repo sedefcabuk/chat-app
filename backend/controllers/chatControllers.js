@@ -56,30 +56,26 @@ const accessChat = asyncHandler(async (req, res) => {
 //@access          Protected
 const fetchChats = asyncHandler(async (req, res) => {
   try {
-    Chat.find({
+    const chats = await Chat.find({
       $or: [
-        { users: req.user._id }, // Kullanıcı grupta varsa
-        { [`removedUsers.${req.user._id}`]: { $exists: true } }, // Daha önce eklenip çıkarılmışsa
-      ],
-      $or: [
-        { isGroupChat: true }, // Grup sohbetleri her zaman görünsün
+        { isGroupChat: true }, // Grup sohbetleri her zaman listelensin
         { latestMessage: { $exists: true } }, // Bireysel sohbetlerde en az 1 mesaj olmalı
       ],
+      users: { $elemMatch: { $eq: req.user._id } }, // Kullanıcı sohbetin bir parçası olmalı
     })
       .populate("users", "-password")
       .populate("groupAdmin", "-password")
       .populate("latestMessage")
-      .sort({ updatedAt: -1 })
-      .then(async (results) => {
-        results = await User.populate(results, {
-          path: "latestMessage.sender",
-          select: "name userName pic email",
-        });
-        res.status(200).send(results);
-      });
+      .sort({ updatedAt: -1 });
+
+    const populatedChats = await User.populate(chats, {
+      path: "latestMessage.sender",
+      select: "name userName pic",
+    });
+
+    res.status(200).send(populatedChats);
   } catch (error) {
-    res.status(400);
-    throw new Error(error.message);
+    res.status(400).json({ message: error.message });
   }
 });
 
