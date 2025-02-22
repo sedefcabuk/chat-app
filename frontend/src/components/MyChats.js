@@ -1,36 +1,64 @@
 import { AddIcon } from "@chakra-ui/icons";
-import { Box, Stack, Text } from "@chakra-ui/layout";
+import { Box, Stack, Text, Button } from "@chakra-ui/react";
 import { useToast } from "@chakra-ui/toast";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { getSender } from "../config/ChatLogics";
 import ChatLoading from "./ChatLoading";
 import GroupChatModal from "./miscellaneous/GroupChatModal";
-import { Button } from "@chakra-ui/react";
 import { ChatState } from "../Context/ChatProvider";
-import CryptoJS from "crypto-js"; // Şifre çözme için ekledik
+import CryptoJS from "crypto-js";
 
-const SECRET_KEY = process.env.REACT_APP_SECRET_KEY; // .env'den almak daha güvenli olur
+const SECRET_KEY = process.env.REACT_APP_SECRET_KEY;
 
 const MyChats = ({ fetchAgain }) => {
-  const [loggedUser, setLoggedUser] = useState();
+  const [loggedUser, setLoggedUser] = useState(null);
   const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
   const toast = useToast();
 
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("userInfo"));
+    setLoggedUser(storedUser);
+
+    if (!storedUser) {
+      toast({
+        title: "Hata!",
+        description: "Kullanıcı bilgileri bulunamadı!",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom-left",
+      });
+      return;
+    }
+
+    if (!user) {
+      console.log("User state güncellenmedi, bekleniyor...");
+      return;
+    }
+
+    fetchChats();
+  }, [fetchAgain, user]);
+
   const fetchChats = async () => {
+    console.log("fetchChats çağrıldı...");
+    if (!user?.token) {
+      console.log("Token bulunamadı, chatler yüklenmedi.");
+      return;
+    }
+
     try {
       const config = {
-        headers: {
-          Authorization: `Bearer ${user.token}`,
-        },
+        headers: { Authorization: `Bearer ${user.token}` },
       };
-
       const { data } = await axios.get("/api/chat", config);
+      console.log("Sohbetler başarıyla çekildi:", data);
       setChats(data);
     } catch (error) {
+      console.error("Chatleri çekerken hata oluştu:", error);
       toast({
-        title: "Error Occured!",
-        description: "Failed to Load the chats",
+        title: "Hata!",
+        description: "Sohbetleri yüklerken hata oluştu.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -39,24 +67,15 @@ const MyChats = ({ fetchAgain }) => {
     }
   };
 
-  useEffect(() => {
-    setLoggedUser(JSON.parse(localStorage.getItem("userInfo")));
-    fetchChats();
-    // eslint-disable-next-line
-  }, [fetchAgain]);
-
-  // Şifre Çözme Fonksiyonu
   const decryptMessage = (ciphertext) => {
     try {
-      if (!ciphertext || typeof ciphertext !== "string") return ciphertext; // Geçersiz veri ise direkt döndür
-
+      if (!ciphertext || typeof ciphertext !== "string") return ciphertext;
       const bytes = CryptoJS.AES.decrypt(ciphertext, SECRET_KEY);
       const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
-
-      return decryptedText || ciphertext; // Eğer çözemezsek orijinal metni göster
+      return decryptedText || ciphertext;
     } catch (error) {
       console.error("Şifre çözme hatası:", error);
-      return ciphertext; // Hata olursa şifrelenmiş metni olduğu gibi göster
+      return ciphertext;
     }
   };
 
@@ -126,11 +145,11 @@ const MyChats = ({ fetchAgain }) => {
                       new Date(chat.removedUsers[loggedUser._id])) && (
                     <Text fontSize="xs">
                       <b>
-                        {chat.latestMessage.sender.name === loggedUser.name
+                        {chat.latestMessage.sender.name === loggedUser?.name
                           ? "You"
-                          : chat.latestMessage.sender.name}{" "}
-                        :{" "}
-                      </b>
+                          : chat.latestMessage.sender.name}
+                        :
+                      </b>{" "}
                       {decryptMessage(chat.latestMessage.content).length > 50
                         ? decryptMessage(chat.latestMessage.content).substring(
                             0,

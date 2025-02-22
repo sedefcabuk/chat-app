@@ -108,7 +108,10 @@ const Signup = () => {
         isClosable: true,
         position: "bottom",
       });
+      localStorage.setItem("token", data.token);
+      localStorage.removeItem("userInfo"); // Eski bilgileri temizle
       localStorage.setItem("userInfo", JSON.stringify(data));
+
       setUser(data);
       setPicLoading(false);
       history.push("/chats");

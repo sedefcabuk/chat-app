@@ -45,6 +45,7 @@ function SideDrawer() {
     setNotification,
     chats,
     setChats,
+    setUser,
   } = ChatState();
 
   const toast = useToast();
@@ -183,8 +184,12 @@ function SideDrawer() {
               />
             </MenuButton>
             <MenuList>
-              <UpdateProfileModal user={user}>
-                <MenuItem>Profile</MenuItem>{" "}
+              <UpdateProfileModal
+                user={user}
+                token={user.token}
+                setUser={setUser}
+              >
+                <MenuItem>Profile</MenuItem>
               </UpdateProfileModal>
               <MenuDivider />
               <MenuItem onClick={logoutHandler}>Logout</MenuItem>
