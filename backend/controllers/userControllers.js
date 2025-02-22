@@ -1,7 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const generateToken = require("../config/generateToken");
-const cloudinary = require("../config/cloudinary");
 const jwt = require("jsonwebtoken");
 
 //@description     Get or Search all users
@@ -97,20 +96,40 @@ const authUser = asyncHandler(async (req, res) => {
 });
 const updateProfile = async (req, res) => {
   try {
-    const { name, userName, pic } = req.body;
+    const { name, userName, email, pic } = req.body;
     const user = await User.findById(req.user._id);
 
     if (!user) {
       return res.status(404).json({ message: "Kullanıcı bulunamadı!" });
     }
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+    if (email && !emailRegex.test(email)) {
+      return res.status(400).json({ message: "Geçersiz e-posta formatı!" });
+    }
+
+    // Başka bir kullanıcı bu userName'i kullanıyor mu?
+    const existingUserName = await User.findOne({ userName });
+    if (
+      existingUserName &&
+      existingUserName._id.toString() !== user._id.toString()
+    ) {
+      return res.status(400).json({ message: "Username already exists!" });
+    }
+
+    // Başka bir kullanıcı bu email'i kullanıyor mu?
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail && existingEmail._id.toString() !== user._id.toString()) {
+      return res.status(400).json({ message: "Email already exists!" });
+    }
 
     user.name = name || user.name;
     user.userName = userName || user.userName;
+    user.email = email || user.email;
     user.pic = pic || user.pic;
 
     await user.save();
 
-    // Güncellenmiş kullanıcıya **token ekledik!**
+    // Güncellenmiş kullanıcıya token ekledik
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "30d",
     });
@@ -121,7 +140,7 @@ const updateProfile = async (req, res) => {
       userName: user.userName,
       email: user.email,
       pic: user.pic,
-      token, // ✅ Yeni token burada
+      token,
     });
   } catch (error) {
     res.status(500).json({ message: "Profil güncellenirken hata oluştu!" });

@@ -28,6 +28,7 @@ const UpdateProfileModal = ({ setUser }) => {
   const [user, setUserState] = useState(getStoredUser());
   const [name, setName] = useState(user?.name || "");
   const [userName, setUserName] = useState(user?.userName || "");
+  const [email, setEmail] = useState(user?.email || "");
   const [pic, setPic] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -37,14 +38,15 @@ const UpdateProfileModal = ({ setUser }) => {
   useEffect(() => {
     const isNameChanged = name.trim() !== user?.name?.trim();
     const isUserNameChanged = userName.trim() !== user?.userName?.trim();
+    const isEmailChanged = email.trim() !== user?.email?.trim();
     const isPicChanged = pic !== null;
 
-    if (isNameChanged || isUserNameChanged || isPicChanged) {
+    if (isNameChanged || isUserNameChanged || isEmailChanged || isPicChanged) {
       setIsDisabled(false); // Gerçek bir değişiklik varsa butonu aktif yap
     } else {
       setIsDisabled(true); // Değişiklik yoksa butonu pasif yap
     }
-  }, [name, userName, pic, user]);
+  }, [name, userName, email, pic, user]);
 
   useEffect(() => {
     if (isOpen) {
@@ -52,6 +54,7 @@ const UpdateProfileModal = ({ setUser }) => {
       if (updatedUser) {
         setName(updatedUser.name || "");
         setUserName(updatedUser.userName || "");
+        setEmail(updatedUser.email || "");
       }
     }
   }, [isOpen]); // ✅ Sonsuz döngüyü önledik
@@ -61,6 +64,15 @@ const UpdateProfileModal = ({ setUser }) => {
       localStorage.setItem("userInfo", JSON.stringify(user));
     }
   }, [user]);
+  useEffect(() => {
+    setMessage(""); // ✅ Modal açılınca mesajları temizle
+  }, [isOpen]); // isOpen değiştiğinde çalışır
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleUpdate();
+    }
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -77,9 +89,18 @@ const UpdateProfileModal = ({ setUser }) => {
   const handleUpdate = async () => {
     setMessage(""); // Önceki mesajları temizle
 
-    // Kullanıcı adı boşsa uyarı ver
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+
     if (!userName.trim()) {
-      setMessage("Kullanıcı adı boş olamaz!");
+      setMessage("Username cannot be empty!");
+      return;
+    }
+    if (!email.trim()) {
+      setMessage("Email cannot be empty!");
+      return;
+    }
+    if (!emailRegex.test(email)) {
+      setMessage("Email should be in the following format: example@email.com!");
       return;
     }
 
@@ -88,7 +109,6 @@ const UpdateProfileModal = ({ setUser }) => {
     try {
       let imageUrl = user?.pic;
 
-      // Eğer yeni bir resim seçildiyse, Cloudinary'ye yükle
       if (pic) {
         const formData = new FormData();
         formData.append("file", pic);
@@ -103,8 +123,7 @@ const UpdateProfileModal = ({ setUser }) => {
         imageUrl = cloudinaryResponse.data.secure_url;
       }
 
-      // **Eksik tanımlanan değişkenler eklendi!**
-      const updatedData = { name, userName, pic: imageUrl };
+      const updatedData = { name, userName, email, pic: imageUrl };
       const config = {
         headers: {
           "Content-Type": "application/json",
@@ -113,13 +132,10 @@ const UpdateProfileModal = ({ setUser }) => {
       };
 
       const response = await axios.put(
-        "http://localhost:5000/api/user/profile",
+        "/api/user/profile",
         updatedData,
         config
       );
-
-      console.log("API'den Dönen Yanıt:", response.data);
-      console.log("Yeni Token:", response.data.token);
 
       localStorage.setItem("userInfo", JSON.stringify(response.data));
       setUserState(response.data);
@@ -134,10 +150,19 @@ const UpdateProfileModal = ({ setUser }) => {
         onClose();
       }, 500);
     } catch (error) {
-      console.error("Hata:", error);
-      setMessage(
-        error.response?.data?.message || "Profil güncellenirken hata oluştu!"
-      );
+      if (error.response?.data?.message === "Username already exists!") {
+        setMessage("This username is already taken!");
+      } else if (error.response?.data?.message === "Email already exists!") {
+        setMessage("This email is already taken!");
+      } else if (
+        error.response?.data?.message === "Geçersiz e-posta formatı!"
+      ) {
+        setMessage(
+          "Email should be in the following format: example@email.com"
+        );
+      } else {
+        setMessage("Profil güncellenirken hata oluştu!");
+      }
     } finally {
       setLoading(false);
     }
@@ -169,6 +194,7 @@ const UpdateProfileModal = ({ setUser }) => {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                onKeyDown={handleKeyDown}
               />
             </FormControl>
 
@@ -178,6 +204,16 @@ const UpdateProfileModal = ({ setUser }) => {
                 type="text"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+            </FormControl>
+            <FormControl mt={3}>
+              <FormLabel>Email</FormLabel>
+              <Input
+                type="text"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={handleKeyDown}
               />
             </FormControl>
 
@@ -187,7 +223,7 @@ const UpdateProfileModal = ({ setUser }) => {
             </FormControl>
 
             {message && (
-              <Text color="green.500" mt={2}>
+              <Text color="red" mt={2}>
                 {message}
               </Text>
             )}

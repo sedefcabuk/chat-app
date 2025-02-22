@@ -139,25 +139,22 @@ const MyChats = ({ fetchAgain }) => {
                     ? getSender(loggedUser, chat.users)
                     : chat.chatName}
                 </Text>
-                {chat.latestMessage &&
-                  (!chat.removedUsers?.[loggedUser._id] ||
-                    new Date(chat.latestMessage.createdAt) <
-                      new Date(chat.removedUsers[loggedUser._id])) && (
-                    <Text fontSize="xs">
-                      <b>
-                        {chat.latestMessage.sender.name === loggedUser?.name
-                          ? "You"
-                          : chat.latestMessage.sender.name}
-                        :
-                      </b>{" "}
-                      {decryptMessage(chat.latestMessage.content).length > 50
-                        ? decryptMessage(chat.latestMessage.content).substring(
-                            0,
-                            51
-                          ) + "..."
-                        : decryptMessage(chat.latestMessage.content)}
-                    </Text>
-                  )}
+                {chat.latestMessage && (
+                  <Text fontSize="xs">
+                    <b>
+                      {chat.latestMessage.sender.name === loggedUser?.name
+                        ? "You"
+                        : chat.latestMessage.sender.name}
+                      :
+                    </b>{" "}
+                    {decryptMessage(chat.latestMessage.content).length > 50
+                      ? decryptMessage(chat.latestMessage.content).substring(
+                          0,
+                          51
+                        ) + "..."
+                      : decryptMessage(chat.latestMessage.content)}
+                  </Text>
+                )}
               </Box>
             ))}
           </Stack>
