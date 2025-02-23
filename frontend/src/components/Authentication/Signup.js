@@ -109,7 +109,7 @@ const Signup = () => {
         position: "bottom",
       });
       localStorage.setItem("token", data.token);
-      localStorage.removeItem("userInfo"); // Eski bilgileri temizle
+      localStorage.removeItem("userInfo");
       localStorage.setItem("userInfo", JSON.stringify(data));
 
       setUser(data);

@@ -185,10 +185,8 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
       );
 
       if (user1._id === user._id) {
-        // Kendini çıkardıysa sohbeti kapat
         setSelectedChat(null);
       } else {
-        // Başkasını çıkardıysa, sadece `users` listesini güncelle
         setSelectedChat({
           ...selectedChat,
           users: selectedChat.users.filter((u) => u._id !== user1._id),

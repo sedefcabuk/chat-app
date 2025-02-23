@@ -57,11 +57,8 @@ const accessChat = asyncHandler(async (req, res) => {
 const fetchChats = asyncHandler(async (req, res) => {
   try {
     const chats = await Chat.find({
-      $or: [
-        { isGroupChat: true }, // Grup sohbetleri her zaman listelensin
-        { latestMessage: { $exists: true } }, // Bireysel sohbetlerde en az 1 mesaj olmalı
-      ],
-      users: { $elemMatch: { $eq: req.user._id } }, // Kullanıcı sohbetin bir parçası olmalı
+      $or: [{ isGroupChat: true }, { latestMessage: { $exists: true } }],
+      users: { $elemMatch: { $eq: req.user._id } },
     })
       .populate("users", "-password")
       .populate("groupAdmin", "-password")
@@ -128,7 +125,6 @@ const renameGroup = asyncHandler(async (req, res) => {
     throw new Error("Chat Not Found");
   }
 
-  // Kullanıcı grupta değilse veya çıkarıldıysa işlemi engelle
   if (!chat.users.includes(req.user._id)) {
     res.status(403);
     throw new Error("You are not a member of this group.");
@@ -157,13 +153,11 @@ const removeFromGroup = asyncHandler(async (req, res) => {
     throw new Error("Chat Not Found");
   }
 
-  // Kullanıcı yetkili mi kontrol et
   if (!chat.users.includes(req.user._id)) {
     res.status(403);
     throw new Error("You are not a member of this group.");
   }
 
-  // Kullanıcının çıkarıldığı zamanı kaydet
   const removalTime = new Date();
 
   const updatedChat = await Chat.findByIdAndUpdate(
@@ -192,7 +186,6 @@ const addToGroup = asyncHandler(async (req, res) => {
     throw new Error("Chat Not Found");
   }
 
-  // Kullanıcı yetkili mi kontrol et
   if (!chat.users.includes(req.user._id)) {
     res.status(403);
     throw new Error("You are not a member of this group.");

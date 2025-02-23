@@ -42,9 +42,9 @@ const UpdateProfileModal = ({ setUser }) => {
     const isPicChanged = pic !== null;
 
     if (isNameChanged || isUserNameChanged || isEmailChanged || isPicChanged) {
-      setIsDisabled(false); // Gerçek bir değişiklik varsa butonu aktif yap
+      setIsDisabled(false);
     } else {
-      setIsDisabled(true); // Değişiklik yoksa butonu pasif yap
+      setIsDisabled(true);
     }
   }, [name, userName, email, pic, user]);
 
@@ -57,7 +57,7 @@ const UpdateProfileModal = ({ setUser }) => {
         setEmail(updatedUser.email || "");
       }
     }
-  }, [isOpen]); // ✅ Sonsuz döngüyü önledik
+  }, [isOpen]);
 
   useEffect(() => {
     if (user) {
@@ -65,8 +65,8 @@ const UpdateProfileModal = ({ setUser }) => {
     }
   }, [user]);
   useEffect(() => {
-    setMessage(""); // ✅ Modal açılınca mesajları temizle
-  }, [isOpen]); // isOpen değiştiğinde çalışır
+    setMessage("");
+  }, [isOpen]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
@@ -87,7 +87,7 @@ const UpdateProfileModal = ({ setUser }) => {
   };
 
   const handleUpdate = async () => {
-    setMessage(""); // Önceki mesajları temizle
+    setMessage("");
 
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
 
@@ -236,8 +236,8 @@ const UpdateProfileModal = ({ setUser }) => {
               colorScheme="blue"
               onClick={handleUpdate}
               isLoading={loading}
-              isDisabled={isDisabled} // Butonu aktif/pasif yap
-              opacity={isDisabled ? 0.5 : 1} // Soluk görünmesini sağla
+              isDisabled={isDisabled}
+              opacity={isDisabled ? 0.5 : 1}
             >
               Update
             </Button>

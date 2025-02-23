@@ -44,9 +44,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const decryptMessage = (ciphertext) => {
     try {
       const bytes = CryptoJS.AES.decrypt(ciphertext, SECRET_KEY);
-      return bytes.toString(CryptoJS.enc.Utf8) || ciphertext; // Eğer çözemezsek, şifreli halini göster
+      return bytes.toString(CryptoJS.enc.Utf8) || ciphertext;
     } catch (error) {
-      return ciphertext; // Hata olursa orijinal metni döndür
+      return ciphertext;
     }
   };
 
@@ -67,10 +67,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         config
       );
 
-      // Şifreli mesajları çözüp güncelle
       const decryptedMessages = data.map((message) => ({
         ...message,
-        content: decryptMessage(message.content), // Şifre çözme işlemi
+        content: decryptMessage(message.content),
       }));
 
       setMessages(decryptedMessages);
@@ -111,7 +110,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         socket.emit("new message", data);
         setMessages([...messages, data]);
       } catch (error) {
-        let errorMessage = "Failed to send the message"; // Varsayılan hata mesajı
+        let errorMessage = "Failed to send the message";
         if (error.response && error.response.status === 403) {
           errorMessage =
             "Since you are no longer a member of this group, you cannot send messages to the group.";

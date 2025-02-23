@@ -7,7 +7,7 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
-const SECRET_KEY = process.env.SECRET_KEY; // Daha güvenli bir yöntem için .env kullanabilirsiniz
+const SECRET_KEY = process.env.SECRET_KEY;
 
 //@description     Get all Messages
 //@route           GET /api/Message/:chatId
@@ -20,12 +20,10 @@ const allMessages = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: "Chat not found" });
     }
 
-    // Kullanıcının gruptan çıkarılma zamanını kontrol et
     const removedTime = chat.removedUsers?.get(req.user._id.toString());
 
     let messageQuery = { chat: req.params.chatId };
 
-    // Eğer kullanıcı gruptan çıkarıldıysa, sadece çıkarılmadan önceki mesajları göster
     if (removedTime) {
       messageQuery.createdAt = { $lt: removedTime };
     }
@@ -34,7 +32,6 @@ const allMessages = asyncHandler(async (req, res) => {
       .populate("sender", "name userName pic email")
       .populate("chat");
 
-    // Mesajları çözerek istemciye düz metin olarak gönder
     const decryptedMessages = messages.map((msg) => ({
       ...msg.toObject(),
       content: decryptMessage(msg.content),
@@ -64,7 +61,6 @@ const sendMessage = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "Chat not found" });
   }
 
-  // Kullanıcı bu grupta değilse hata döndür
   if (chat.isGroupChat && !chat.users.includes(req.user._id)) {
     return res.status(403).json({
       message:
@@ -101,12 +97,10 @@ const sendMessage = asyncHandler(async (req, res) => {
   }
 });
 
-// Mesaj Şifreleme Fonksiyonu
 const encryptMessage = (message) => {
   return CryptoJS.AES.encrypt(message, SECRET_KEY).toString();
 };
 
-// Mesaj Çözme Fonksiyonu
 const decryptMessage = (ciphertext) => {
   const bytes = CryptoJS.AES.decrypt(ciphertext, SECRET_KEY);
   return bytes.toString(CryptoJS.enc.Utf8);

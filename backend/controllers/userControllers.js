@@ -107,7 +107,6 @@ const updateProfile = async (req, res) => {
       return res.status(400).json({ message: "Geçersiz e-posta formatı!" });
     }
 
-    // Başka bir kullanıcı bu userName'i kullanıyor mu?
     const existingUserName = await User.findOne({ userName });
     if (
       existingUserName &&
@@ -116,7 +115,6 @@ const updateProfile = async (req, res) => {
       return res.status(400).json({ message: "Username already exists!" });
     }
 
-    // Başka bir kullanıcı bu email'i kullanıyor mu?
     const existingEmail = await User.findOne({ email });
     if (existingEmail && existingEmail._id.toString() !== user._id.toString()) {
       return res.status(400).json({ message: "Email already exists!" });
@@ -129,7 +127,6 @@ const updateProfile = async (req, res) => {
 
     await user.save();
 
-    // Güncellenmiş kullanıcıya token ekledik
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "30d",
     });
