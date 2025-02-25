@@ -170,7 +170,7 @@ const UpdateProfileModal = ({ setUser }) => {
 
   return (
     <>
-      <MenuItem onClick={onOpen}>Profile</MenuItem>
+      <MenuItem onClick={onOpen}>Update Profile</MenuItem>
 
       <Modal size="lg" onClose={onClose} isOpen={isOpen} isCentered>
         <ModalOverlay />

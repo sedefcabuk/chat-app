@@ -26,6 +26,7 @@ import { useToast } from "@chakra-ui/toast";
 import ChatLoading from "../ChatLoading";
 import { Spinner } from "@chakra-ui/spinner";
 import UpdateProfileModal from "./UpdateProfileModal";
+import ChangePasswordModal from "./ChangePasswordModal";
 import NotificationBadge from "react-notification-badge";
 import { Effect } from "react-notification-badge";
 import { getSender } from "../../config/ChatLogics";
@@ -189,8 +190,16 @@ function SideDrawer() {
                 token={user.token}
                 setUser={setUser}
               >
-                <MenuItem>Profile</MenuItem>
+                <MenuItem>Update Profile</MenuItem>
               </UpdateProfileModal>
+              <MenuDivider />
+              <ChangePasswordModal
+                user={user}
+                token={user.token}
+                setUser={setUser}
+              >
+                <MenuItem>Change Password</MenuItem>
+              </ChangePasswordModal>
               <MenuDivider />
               <MenuItem onClick={logoutHandler}>Logout</MenuItem>
             </MenuList>

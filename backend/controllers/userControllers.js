@@ -143,10 +143,35 @@ const updateProfile = async (req, res) => {
     res.status(500).json({ message: "Profil güncellenirken hata oluştu!" });
   }
 };
+const changePassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+
+  if (!oldPassword || !newPassword) {
+    return res.status(400).json({ message: "Lütfen tüm alanları doldurun!" });
+  }
+
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    return res.status(404).json({ message: "Kullanıcı bulunamadı!" });
+  }
+
+  const isMatch = await user.matchPassword(oldPassword);
+
+  if (!isMatch) {
+    return res.status(400).json({ message: "Old password is incorrect!" });
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  res.json({ message: "Şifre başarıyla güncellendi!" });
+});
 
 module.exports = {
   allUsers,
   registerUser,
   authUser,
   updateProfile,
+  changePassword,
 };
