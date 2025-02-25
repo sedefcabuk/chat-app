@@ -29,7 +29,9 @@ const Signup = () => {
   };
 
   const validatePassword = (password) => {
-    return password.length >= 8 && /\d/.test(password);
+    return (
+      password.length >= 8 && /\d/.test(password) && /[a-zA-Z]/.test(password)
+    );
   };
 
   const submitHandler = async () => {
@@ -61,7 +63,7 @@ const Signup = () => {
     if (!validatePassword(password)) {
       toast({
         title:
-          "Password must be at least 8 characters long and contain at least one number",
+          "Your password must be at least 8 characters long and include at least one letter and one number.",
         status: "warning",
         duration: 5000,
         isClosable: true,

@@ -35,6 +35,12 @@ const ChangePasswordModal = () => {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  const validatePassword = (password) => {
+    return (
+      password.length >= 8 && /[a-zA-Z]/.test(password) && /\d/.test(password)
+    );
+  };
+
   useEffect(() => {
     setIsDisabled(
       !oldPassword.trim() || !newPassword.trim() || !confirmPassword.trim()
@@ -66,6 +72,13 @@ const ChangePasswordModal = () => {
 
     if (!oldPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
       setMessage("Fields cannot be empty!");
+      return;
+    }
+
+    if (!validatePassword(newPassword)) {
+      setMessage(
+        "Your password must be at least 8 characters long and include at least one letter and one number."
+      );
       return;
     }
 
