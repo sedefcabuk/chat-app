@@ -1,7 +1,6 @@
 const cloudinary = require("cloudinary").v2;
-require("dotenv").config(); // .env dosyasından Cloudinary bilgilerini almak için
+require("dotenv").config();
 
-// Cloudinary yapılandırması
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,

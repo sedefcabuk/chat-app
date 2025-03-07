@@ -103,7 +103,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
   const handleAddUser = async (user1) => {
     if (selectedChat.users.find((u) => u._id === user1._id)) {
       toast({
-        title: "User Already in group!",
+        title: "Kullanıcı zaten eklenmiş.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -114,7 +114,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
 
     if (selectedChat.groupAdmin._id !== user._id) {
       toast({
-        title: "Only admins can add someone!",
+        title: "Sadece yöneticiler gruba kullanıcı ekleyebilir.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -159,7 +159,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
   const handleRemove = async (user1) => {
     if (selectedChat.groupAdmin._id !== user._id && user1._id !== user._id) {
       toast({
-        title: "Only admins can remove someone!",
+        title: "Sadece yöneticiler gruptan kullanıcı çıkarabilir.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -244,7 +244,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
             </Box>
             <FormControl display="flex">
               <Input
-                placeholder="Group Name"
+                placeholder="Grup Adı"
                 mb={3}
                 value={groupChatName}
                 onChange={(e) => setGroupChatName(e.target.value)}
@@ -256,12 +256,12 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
                 isLoading={renameloading}
                 onClick={handleRename}
               >
-                Update
+                Güncelle
               </Button>
             </FormControl>
             <FormControl>
               <Input
-                placeholder="Search for a Name or Username"
+                placeholder="Kullanıcı Ara"
                 mb={1}
                 onChange={(e) => handleSearch(e.target.value)}
               />
@@ -281,7 +281,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
           </ModalBody>
           <ModalFooter>
             <Button onClick={() => handleRemove(user)} colorScheme="red">
-              Leave Group
+              Gruptan Çık
             </Button>
           </ModalFooter>
         </ModalContent>

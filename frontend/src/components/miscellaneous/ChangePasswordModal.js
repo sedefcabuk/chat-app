@@ -77,13 +77,13 @@ const ChangePasswordModal = () => {
 
     if (!validatePassword(newPassword)) {
       setMessage(
-        "Your password must be at least 8 characters long and include at least one letter and one number."
+        "Şifreniz en az 8 karakter olmalı ve en az bir harf ve bir rakam içermelidir!"
       );
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setMessage("New passwords do not match!");
+      setMessage("Şifreler eşleşmiyor!");
       return;
     }
 
@@ -103,7 +103,7 @@ const ChangePasswordModal = () => {
         config
       );
 
-      setMessage("Password changed successfully!");
+      setMessage("Şifre başarıyla değiştirildi.");
       setMessageType("success");
 
       setTimeout(() => {
@@ -119,18 +119,18 @@ const ChangePasswordModal = () => {
 
   return (
     <>
-      <MenuItem onClick={onOpen}>Change Password</MenuItem>
+      <MenuItem onClick={onOpen}>Şifreyi Değiştir</MenuItem>
 
       <Modal size="lg" onClose={handleClose} isOpen={isOpen} isCentered>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader fontSize="30px" textAlign="center">
-            Change Password
+            Şifreyi Değiştir
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody display="flex" flexDir="column" alignItems="center">
             <FormControl mt={3}>
-              <FormLabel>Old Password</FormLabel>
+              <FormLabel>Eski Şifre</FormLabel>
               <InputGroup size="md">
                 <Input
                   type={showOld ? "text" : "password"}
@@ -151,7 +151,7 @@ const ChangePasswordModal = () => {
             </FormControl>
 
             <FormControl mt={3}>
-              <FormLabel>New Password</FormLabel>
+              <FormLabel>Yeni Şifre</FormLabel>
               <InputGroup size="md">
                 <Input
                   type={showNew ? "text" : "password"}
@@ -172,7 +172,7 @@ const ChangePasswordModal = () => {
             </FormControl>
 
             <FormControl mt={3}>
-              <FormLabel>Confirm New Password</FormLabel>
+              <FormLabel>Yeni Şifre Tekrar</FormLabel>
               <InputGroup size="md">
                 <Input
                   type={showConfirm ? "text" : "password"}
@@ -203,7 +203,7 @@ const ChangePasswordModal = () => {
           </ModalBody>
           <ModalFooter>
             <Button onClick={handleClose} mr={3}>
-              Close
+              Kapat
             </Button>
             <Button
               colorScheme="blue"
@@ -211,7 +211,7 @@ const ChangePasswordModal = () => {
               isLoading={loading}
               isDisabled={isDisabled}
             >
-              Change Password
+              Şifreyi Değiştir
             </Button>
           </ModalFooter>
         </ModalContent>

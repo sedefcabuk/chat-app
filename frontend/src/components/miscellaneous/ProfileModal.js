@@ -58,7 +58,7 @@ const ProfileModal = ({ user, children }) => {
             />
           </ModalBody>
           <ModalFooter>
-            <Button onClick={onClose}>Close</Button>
+            <Button onClick={onClose}>Kapat</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

@@ -38,7 +38,7 @@ const Signup = () => {
     setPicLoading(true);
     if (!name || !userName || !email || !password || !confirmpassword) {
       toast({
-        title: "Please Fill all the Feilds",
+        title: "Lütfen bütün alanları doldurun!",
         status: "warning",
         duration: 5000,
         isClosable: true,
@@ -50,7 +50,7 @@ const Signup = () => {
 
     if (!validateEmail(email)) {
       toast({
-        title: "Email should be in the following format: example@email.com",
+        title: "E-posta şu formatta olmalı: example@email.com",
         status: "warning",
         duration: 5000,
         isClosable: true,
@@ -63,7 +63,7 @@ const Signup = () => {
     if (!validatePassword(password)) {
       toast({
         title:
-          "Your password must be at least 8 characters long and include at least one letter and one number.",
+          "Şifreniz en az 8 karakter olmalı ve en az bir harf ve rakam içermelidir.",
         status: "warning",
         duration: 5000,
         isClosable: true,
@@ -75,7 +75,7 @@ const Signup = () => {
     if (password !== confirmpassword) {
       setPicLoading(true);
       toast({
-        title: "Passwords Do Not Match",
+        title: "Şifreler eşleşmiyor!",
         status: "warning",
         duration: 5000,
         isClosable: true,
@@ -104,7 +104,7 @@ const Signup = () => {
       );
       console.log(data);
       toast({
-        title: "Registration Successful",
+        title: "Kayıt başarılı",
         status: "success",
         duration: 5000,
         isClosable: true,
@@ -183,36 +183,36 @@ const Signup = () => {
   return (
     <VStack spacing="5px">
       <FormControl id="first-name" isRequired>
-        <FormLabel>Name</FormLabel>
+        <FormLabel>Ad</FormLabel>
         <Input
-          placeholder="Enter Your Name"
+          placeholder=""
           onChange={(e) => setName(e.target.value)}
           onKeyDown={handleKeyDown}
         />
       </FormControl>
       <FormControl id="userName" isRequired>
-        <FormLabel>Username</FormLabel>
+        <FormLabel>Kullanıcı Adı</FormLabel>
         <Input
-          placeholder="Enter Your Username"
+          placeholder=""
           onChange={(e) => setUserName(e.target.value)}
           onKeyDown={handleKeyDown}
         />
       </FormControl>
       <FormControl id="email" isRequired>
-        <FormLabel>Email Address</FormLabel>
+        <FormLabel>E-posta</FormLabel>
         <Input
           type="email"
-          placeholder="Enter Your Email Address"
+          placeholder=""
           onChange={(e) => setEmail(e.target.value)}
           onKeyDown={handleKeyDown}
         />
       </FormControl>
       <FormControl id="password" isRequired>
-        <FormLabel>Password</FormLabel>
+        <FormLabel>Şifre</FormLabel>
         <InputGroup size="md">
           <Input
             type={show ? "text" : "password"}
-            placeholder="Enter Password"
+            placeholder=""
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={handleKeyDown}
           />
@@ -224,11 +224,11 @@ const Signup = () => {
         </InputGroup>
       </FormControl>
       <FormControl id="password" isRequired>
-        <FormLabel>Confirm Password</FormLabel>
+        <FormLabel>Şifre Tekrar</FormLabel>
         <InputGroup size="md">
           <Input
             type={show ? "text" : "password"}
-            placeholder="Confirm password"
+            placeholder=""
             onChange={(e) => setConfirmpassword(e.target.value)}
             onKeyDown={handleKeyDown}
           />
@@ -240,7 +240,7 @@ const Signup = () => {
         </InputGroup>
       </FormControl>
       <FormControl id="pic">
-        <FormLabel>Upload your Picture</FormLabel>
+        <FormLabel>Profil Fotoğrafı</FormLabel>
         <Input
           type="file"
           p={1.5}
@@ -255,7 +255,7 @@ const Signup = () => {
         onClick={submitHandler}
         isLoading={picLoading}
       >
-        Sign up
+        Kaydol
       </Button>
     </VStack>
   );

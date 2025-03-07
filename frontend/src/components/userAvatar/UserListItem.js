@@ -30,7 +30,7 @@ const UserListItem = ({ user, handleFunction, isSelected }) => {
       <Box>
         <Text>{user.name}</Text>
         <Text fontSize="xs">
-          <b>Username: </b>
+          <b>Kullanıcı Adı: </b>
           {user.userName}
         </Text>
       </Box>

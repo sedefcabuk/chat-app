@@ -23,7 +23,7 @@ const MyChats = ({ fetchAgain }) => {
     if (!storedUser) {
       toast({
         title: "Hata!",
-        description: "Kullanıcı bilgileri bulunamadı!",
+        description: "Kullanıcı bilgileri bulunamadı.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -100,14 +100,14 @@ const MyChats = ({ fetchAgain }) => {
         justifyContent="space-between"
         alignItems="center"
       >
-        Chats
+        Sohbetler
         <GroupChatModal>
           <Button
             display="flex"
             fontSize={{ base: "17px", md: "10px", lg: "17px" }}
             rightIcon={<AddIcon />}
           >
-            New Group Chat
+            Yeni Grup
           </Button>
         </GroupChatModal>
       </Box>
@@ -143,7 +143,7 @@ const MyChats = ({ fetchAgain }) => {
                   <Text fontSize="xs">
                     <b>
                       {chat.latestMessage.sender.name === loggedUser?.name
-                        ? "You"
+                        ? "Siz"
                         : chat.latestMessage.sender.name}
                       :
                     </b>{" "}

@@ -92,15 +92,15 @@ const UpdateProfileModal = ({ setUser }) => {
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
 
     if (!userName.trim()) {
-      setMessage("Username cannot be empty!");
+      setMessage("Kullanıcı adı boş bırakılamaz!");
       return;
     }
     if (!email.trim()) {
-      setMessage("Email cannot be empty!");
+      setMessage("E-posta boş bırakılamaz!");
       return;
     }
     if (!emailRegex.test(email)) {
-      setMessage("Email should be in the following format: example@email.com!");
+      setMessage("E-posta şu formatta olmalı: example@email.com!");
       return;
     }
 
@@ -151,15 +151,13 @@ const UpdateProfileModal = ({ setUser }) => {
       }, 500);
     } catch (error) {
       if (error.response?.data?.message === "Username already exists!") {
-        setMessage("This username is already taken!");
+        setMessage("Bu kullanıcı adı alınamaz!");
       } else if (error.response?.data?.message === "Email already exists!") {
-        setMessage("This email is already taken!");
+        setMessage("Bu e-posta kullanılıyor!");
       } else if (
         error.response?.data?.message === "Geçersiz e-posta formatı!"
       ) {
-        setMessage(
-          "Email should be in the following format: example@email.com"
-        );
+        setMessage("E-posta şu formatta olmalı: example@email.com");
       } else {
         setMessage("Profil güncellenirken hata oluştu!");
       }
@@ -170,13 +168,13 @@ const UpdateProfileModal = ({ setUser }) => {
 
   return (
     <>
-      <MenuItem onClick={onOpen}>Update Profile</MenuItem>
+      <MenuItem onClick={onOpen}>Profili Güncelle</MenuItem>
 
       <Modal size="lg" onClose={onClose} isOpen={isOpen} isCentered>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader fontSize="30px" textAlign="center">
-            Update Profile
+            Profili Güncelle
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody display="flex" flexDir="column" alignItems="center">
@@ -189,7 +187,7 @@ const UpdateProfileModal = ({ setUser }) => {
             />
 
             <FormControl>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>Ad</FormLabel>
               <Input
                 type="text"
                 value={name}
@@ -199,7 +197,7 @@ const UpdateProfileModal = ({ setUser }) => {
             </FormControl>
 
             <FormControl mt={3}>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>Kullanıcı Adı</FormLabel>
               <Input
                 type="text"
                 value={userName}
@@ -208,7 +206,7 @@ const UpdateProfileModal = ({ setUser }) => {
               />
             </FormControl>
             <FormControl mt={3}>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>E-posta</FormLabel>
               <Input
                 type="text"
                 value={email}
@@ -218,7 +216,7 @@ const UpdateProfileModal = ({ setUser }) => {
             </FormControl>
 
             <FormControl mt={3}>
-              <FormLabel>Profile Photo</FormLabel>
+              <FormLabel>Profil Fotoğrafı</FormLabel>
               <Input type="file" onChange={handleFileChange} />
             </FormControl>
 
@@ -230,7 +228,7 @@ const UpdateProfileModal = ({ setUser }) => {
           </ModalBody>
           <ModalFooter>
             <Button onClick={onClose} mr={3}>
-              Close
+              Kapat
             </Button>
             <Button
               colorScheme="blue"
@@ -239,7 +237,7 @@ const UpdateProfileModal = ({ setUser }) => {
               isDisabled={isDisabled}
               opacity={isDisabled ? 0.5 : 1}
             >
-              Update
+              Güncelle
             </Button>
           </ModalFooter>
         </ModalContent>

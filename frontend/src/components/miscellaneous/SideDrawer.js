@@ -1,3 +1,4 @@
+import { Search } from "lucide-react";
 import { Button } from "@chakra-ui/button";
 import { useDisclosure } from "@chakra-ui/hooks";
 import { Input } from "@chakra-ui/input";
@@ -138,11 +139,15 @@ function SideDrawer() {
         p="5px 10px 5px 10px"
         borderWidth="5px"
       >
-        <Tooltip label="Search Users to chat" hasArrow placement="bottom-end">
+        <Tooltip
+          label="Sohbete başlamak için kullanıcı ara"
+          hasArrow
+          placement="bottom-end"
+        >
           <Button variant="ghost" onClick={onOpen}>
             <i className="fas fa-search"></i>
             <Text display={{ base: "none", md: "flex" }} px={4}>
-              Search User
+              Kullanıcı Ara
             </Text>
           </Button>
         </Tooltip>
@@ -159,7 +164,7 @@ function SideDrawer() {
               <BellIcon fontSize="2xl" m={1} />
             </MenuButton>
             <MenuList pl={2}>
-              {!notification.length && "No New Messages"}
+              {!notification.length && ""}
               {notification.map((notif) => (
                 <MenuItem
                   key={notif._id}
@@ -190,7 +195,7 @@ function SideDrawer() {
                 token={user.token}
                 setUser={setUser}
               >
-                <MenuItem>Update Profile</MenuItem>
+                <MenuItem>Profili Güncelle</MenuItem>
               </UpdateProfileModal>
               <MenuDivider />
               <ChangePasswordModal
@@ -198,10 +203,10 @@ function SideDrawer() {
                 token={user.token}
                 setUser={setUser}
               >
-                <MenuItem>Change Password</MenuItem>
+                <MenuItem>Şifreyi Değiştir</MenuItem>
               </ChangePasswordModal>
               <MenuDivider />
-              <MenuItem onClick={logoutHandler}>Logout</MenuItem>
+              <MenuItem onClick={logoutHandler}>Çıkış Yap</MenuItem>
             </MenuList>
           </Menu>
         </div>
@@ -210,16 +215,18 @@ function SideDrawer() {
       <Drawer placement="left" onClose={onClose} isOpen={isOpen}>
         <DrawerOverlay />
         <DrawerContent>
-          <DrawerHeader borderBottomWidth="1px">Search Users</DrawerHeader>
+          <DrawerHeader borderBottomWidth="1px">Kullanıcı Ara</DrawerHeader>
           <DrawerBody>
             <Box display="flex" pb={2}>
               <Input
-                placeholder="Search by name or username"
+                placeholder="Ara"
                 mr={2}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <Button onClick={handleSearch}>Search</Button>
+              <Button onClick={handleSearch}>
+                <Search size={20} />
+              </Button>
             </Box>
             {loading ? (
               <ChatLoading />

@@ -267,7 +267,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 <Input
                   variant="filled"
                   bg="#E0E0E0"
-                  placeholder="Type a message"
+                  placeholder="Bir mesaj yazın"
                   value={newMessage}
                   onChange={typingHandler}
                   onKeyDown={handleKeyPress}
@@ -290,7 +290,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           h="100%"
         >
           <Text fontSize="3xl" pb={3} fontFamily="Work sans">
-            Click on a user to start chatting
+            Uçtan uca şifrelenmiş
           </Text>
         </Box>
       )}

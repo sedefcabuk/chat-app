@@ -24,7 +24,7 @@ const Login = () => {
     setLoading(true);
     if (!identifier || !password) {
       toast({
-        title: "Please Fill all the Feilds",
+        title: "Lütfen bütün alanları doldurun!",
         status: "warning",
         duration: 5000,
         isClosable: true,
@@ -48,7 +48,7 @@ const Login = () => {
       );
 
       toast({
-        title: "Login Successful",
+        title: "Giriş başarılı",
         status: "success",
         duration: 5000,
         isClosable: true,
@@ -81,23 +81,23 @@ const Login = () => {
   return (
     <VStack spacing="10px">
       <FormControl id="identifier" isRequired>
-        <FormLabel>Email or username</FormLabel>
+        <FormLabel>Kullanıcı Adı veya E-posta</FormLabel>
         <Input
           value={identifier}
           type="text"
-          placeholder="Enter Your Email or Username"
+          placeholder=""
           onChange={(e) => setIdentifier(e.target.value)}
           onKeyDown={handleKeyPress}
         />
       </FormControl>
       <FormControl id="password" isRequired>
-        <FormLabel>Password</FormLabel>
+        <FormLabel>Şifre</FormLabel>
         <InputGroup size="md">
           <Input
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             type={show ? "text" : "password"}
-            placeholder="Enter password"
+            placeholder=""
             onKeyDown={handleKeyPress}
           />
           <InputRightElement width="4.5rem">
@@ -114,7 +114,7 @@ const Login = () => {
         onClick={submitHandler}
         isLoading={loading}
       >
-        Log in
+        Giriş Yap
       </Button>
     </VStack>
   );

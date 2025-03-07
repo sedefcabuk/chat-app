@@ -39,7 +39,7 @@ const GroupChatModal = ({ children }) => {
   const handleGroup = (userToAdd) => {
     if (selectedUsers.includes(userToAdd)) {
       toast({
-        title: "User already added",
+        title: "Kullanıcı zaten eklendi.",
         status: "warning",
         duration: 5000,
         isClosable: true,
@@ -89,7 +89,7 @@ const GroupChatModal = ({ children }) => {
   const handleSubmit = async () => {
     if (!groupChatName || !selectedUsers) {
       toast({
-        title: "Please fill all the feilds",
+        title: "Lütfen bütün alanları doldurun.",
         status: "warning",
         duration: 5000,
         isClosable: true,
@@ -115,7 +115,7 @@ const GroupChatModal = ({ children }) => {
       setChats([data, ...chats]);
       onClose();
       toast({
-        title: "New Group Chat Created!",
+        title: "Grup oluşturuldu.",
         status: "success",
         duration: 5000,
         isClosable: true,
@@ -158,20 +158,20 @@ const GroupChatModal = ({ children }) => {
             display="flex"
             justifyContent="center"
           >
-            Create Group Chat
+            Yeni Grup
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody display="flex" flexDir="column" alignItems="center">
             <FormControl>
               <Input
-                placeholder="Group Name"
+                placeholder="Grup Adı"
                 mb={3}
                 onChange={(e) => setGroupChatName(e.target.value)}
               />
             </FormControl>
             <FormControl>
               <Input
-                placeholder="Search for a Name or Username"
+                placeholder="Kullanıcı Ara"
                 mb={1}
                 onChange={(e) => handleSearch(e.target.value)}
               />
