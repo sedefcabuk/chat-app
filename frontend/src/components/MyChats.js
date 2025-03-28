@@ -41,7 +41,6 @@ const MyChats = ({ fetchAgain }) => {
   }, [fetchAgain, user]);
 
   const fetchChats = async () => {
-    console.log("fetchChats çağrıldı...");
     if (!user?.token) {
       console.log("Token bulunamadı, chatler yüklenmedi.");
       return;
@@ -52,7 +51,6 @@ const MyChats = ({ fetchAgain }) => {
         headers: { Authorization: `Bearer ${user.token}` },
       };
       const { data } = await axios.get("/api/chat", config);
-      console.log("Sohbetler başarıyla çekildi:", data);
       setChats(data);
     } catch (error) {
       console.error("Chatleri çekerken hata oluştu:", error);
