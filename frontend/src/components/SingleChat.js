@@ -15,10 +15,9 @@ import io from "socket.io-client";
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
 import { MdSend } from "react-icons/md";
-import CryptoJS from "crypto-js";
-const SECRET_KEY = process.env.REACT_APP_SECRET_KEY;
 
-const ENDPOINT = "http://localhost:5000";
+const ENDPOINT = process.env.REACT_APP_API_ENDPOINT || "http://localhost:5000";
+
 var socket, selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
@@ -38,17 +37,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       preserveAspectRatio: "xMidYMid slice",
     },
   };
+
   const { selectedChat, setSelectedChat, user, notification, setNotification } =
     ChatState();
-
-  const decryptMessage = (ciphertext) => {
-    try {
-      const bytes = CryptoJS.AES.decrypt(ciphertext, SECRET_KEY);
-      return bytes.toString(CryptoJS.enc.Utf8) || ciphertext;
-    } catch (error) {
-      return ciphertext;
-    }
-  };
 
   const fetchMessages = async () => {
     if (!selectedChat) return;
@@ -67,12 +58,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         config
       );
 
-      const decryptedMessages = data.map((message) => ({
-        ...message,
-        content: decryptMessage(message.content),
-      }));
-
-      setMessages(decryptedMessages);
+      setMessages(data);
       setLoading(false);
 
       socket.emit("join chat", selectedChat._id);

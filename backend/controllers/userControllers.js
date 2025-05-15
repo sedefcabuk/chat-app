@@ -3,9 +3,7 @@ const User = require("../models/userModel");
 const generateToken = require("../config/generateToken");
 const jwt = require("jsonwebtoken");
 
-//@description     Get or Search all users
-//@route           GET /api/user?search=
-//@access          Public
+// GET /api/user?search=
 const allUsers = asyncHandler(async (req, res) => {
   const keyword = req.query.search
     ? {
@@ -20,9 +18,7 @@ const allUsers = asyncHandler(async (req, res) => {
   res.send(users);
 });
 
-//@description     Register new user
-//@route           POST /api/user/
-//@access          Public
+// POST /api/user/
 const registerUser = asyncHandler(async (req, res) => {
   const { name, userName, email, password, pic } = req.body;
 
@@ -32,14 +28,12 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   const userNameExists = await User.findOne({ userName });
-
   if (userNameExists) {
     res.status(400);
     throw new Error("Username already exists");
   }
 
   const userExists = await User.findOne({ email });
-
   if (userExists) {
     res.status(400);
     throw new Error("Email already exists");
@@ -61,6 +55,7 @@ const registerUser = asyncHandler(async (req, res) => {
       email: user.email,
       isAdmin: user.isAdmin,
       pic: user.pic,
+      publicKey: user.publicKey, // Public key'i gönderiyoruz
       token: generateToken(user._id),
     });
   } else {
@@ -69,9 +64,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-//@description     Auth the user
-//@route           POST /api/users/login
-//@access          Public
+// POST /api/users/login
 const authUser = asyncHandler(async (req, res) => {
   const { identifier, password } = req.body;
 
@@ -87,6 +80,7 @@ const authUser = asyncHandler(async (req, res) => {
       email: user.email,
       isAdmin: user.isAdmin,
       pic: user.pic,
+      publicKey: user.publicKey,
       token: generateToken(user._id),
     });
   } else {
@@ -94,6 +88,7 @@ const authUser = asyncHandler(async (req, res) => {
     throw new Error("Invalid Username/Email or Password");
   }
 });
+
 const updateProfile = async (req, res) => {
   try {
     const { name, userName, email, pic } = req.body;
@@ -102,6 +97,7 @@ const updateProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "Kullanıcı bulunamadı!" });
     }
+
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
     if (email && !emailRegex.test(email)) {
       return res.status(400).json({ message: "Geçersiz e-posta formatı!" });
@@ -137,12 +133,14 @@ const updateProfile = async (req, res) => {
       userName: user.userName,
       email: user.email,
       pic: user.pic,
+      publicKey: user.publicKey,
       token,
     });
   } catch (error) {
     res.status(500).json({ message: "Profil güncellenirken hata oluştu!" });
   }
 };
+
 const changePassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
 
@@ -159,7 +157,7 @@ const changePassword = asyncHandler(async (req, res) => {
   const isMatch = await user.matchPassword(oldPassword);
 
   if (!isMatch) {
-    return res.status(400).json({ message: "Old password is incorrect!" });
+    return res.status(400).json({ message: "Eski şifre yanlış!" });
   }
 
   user.password = newPassword;

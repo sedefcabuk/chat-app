@@ -7,9 +7,6 @@ import { getSender } from "../config/ChatLogics";
 import ChatLoading from "./ChatLoading";
 import GroupChatModal from "./miscellaneous/GroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
-import CryptoJS from "crypto-js";
-
-const SECRET_KEY = process.env.REACT_APP_SECRET_KEY;
 
 const MyChats = ({ fetchAgain }) => {
   const [loggedUser, setLoggedUser] = useState(null);
@@ -62,18 +59,6 @@ const MyChats = ({ fetchAgain }) => {
         isClosable: true,
         position: "bottom-left",
       });
-    }
-  };
-
-  const decryptMessage = (ciphertext) => {
-    try {
-      if (!ciphertext || typeof ciphertext !== "string") return ciphertext;
-      const bytes = CryptoJS.AES.decrypt(ciphertext, SECRET_KEY);
-      const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
-      return decryptedText || ciphertext;
-    } catch (error) {
-      console.error("Şifre çözme hatası:", error);
-      return ciphertext;
     }
   };
 
@@ -145,12 +130,9 @@ const MyChats = ({ fetchAgain }) => {
                         : chat.latestMessage.sender.name}
                       :
                     </b>{" "}
-                    {decryptMessage(chat.latestMessage.content).length > 50
-                      ? decryptMessage(chat.latestMessage.content).substring(
-                          0,
-                          51
-                        ) + "..."
-                      : decryptMessage(chat.latestMessage.content)}
+                    {chat.latestMessage.content.length > 50
+                      ? chat.latestMessage.content.substring(0, 51) + "..."
+                      : chat.latestMessage.content}
                   </Text>
                 )}
               </Box>

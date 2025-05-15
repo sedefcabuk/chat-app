@@ -1,13 +1,23 @@
 const asyncHandler = require("express-async-handler");
-const CryptoJS = require("crypto-js");
-const Message = require("../models/messageModel");
 const User = require("../models/userModel");
+const Message = require("../models/messageModel");
 const Chat = require("../models/chatModel");
+const { hybridEncrypt, hybridDecrypt } = require("../utils/encryptionUtils");
 const dotenv = require("dotenv");
+const fs = require("fs");
+const path = require("path");
 
 dotenv.config();
 
-const SECRET_KEY = process.env.SECRET_KEY;
+// .env'deki yolları kullanarak dosyaları oku
+const privateKey = fs.readFileSync(
+  path.resolve(process.env.PRIVATE_KEY_PATH),
+  "utf8"
+);
+const publicKey = fs.readFileSync(
+  path.resolve(process.env.PUBLIC_KEY_PATH),
+  "utf8"
+);
 
 //@description     Get all Messages
 //@route           GET /api/Message/:chatId
@@ -34,11 +44,12 @@ const allMessages = asyncHandler(async (req, res) => {
 
     const decryptedMessages = messages.map((msg) => ({
       ...msg.toObject(),
-      content: decryptMessage(msg.content),
+      content: hybridDecrypt(msg.content, msg.encryptedKey, msg.iv), // Decrypt message content here
     }));
 
     res.json(decryptedMessages);
   } catch (error) {
+    console.error("Hata oluştu:", error);
     res.status(400).json({ message: error.message });
   }
 });
@@ -50,6 +61,7 @@ const sendMessage = asyncHandler(async (req, res) => {
   const { content, chatId } = req.body;
 
   if (!content || !chatId) {
+    console.log("Eksik veri:", req.body);
     return res
       .status(400)
       .json({ message: "Invalid data passed into request" });
@@ -68,17 +80,19 @@ const sendMessage = asyncHandler(async (req, res) => {
     });
   }
 
-  const encryptedContent = encryptMessage(content);
+  // Encrypt message with hybrid encryption
+  const { encryptedMessage, encryptedKey, iv } = hybridEncrypt(content);
 
-  var newMessage = {
+  const newMessage = {
     sender: req.user._id,
-    content: encryptedContent,
+    content: encryptedMessage,
+    encryptedKey: encryptedKey,
+    iv: iv,
     chat: chatId,
   };
 
   try {
-    var message = await Message.create(newMessage);
-
+    let message = await Message.create(newMessage);
     message = await message.populate("sender", "name pic");
     message = await message.populate("chat");
     message = await User.populate(message, {
@@ -90,20 +104,12 @@ const sendMessage = asyncHandler(async (req, res) => {
 
     res.json({
       ...message.toObject(),
-      content: decryptMessage(message.content),
+      content: hybridDecrypt(message.content, message.encryptedKey, message.iv), // Decrypt message content here before sending it back
     });
   } catch (error) {
+    console.error("Mesaj gönderme hatası:", error);
     res.status(400).json({ message: error.message });
   }
 });
-
-const encryptMessage = (message) => {
-  return CryptoJS.AES.encrypt(message, SECRET_KEY).toString();
-};
-
-const decryptMessage = (ciphertext) => {
-  const bytes = CryptoJS.AES.decrypt(ciphertext, SECRET_KEY);
-  return bytes.toString(CryptoJS.enc.Utf8);
-};
 
 module.exports = { allMessages, sendMessage };
