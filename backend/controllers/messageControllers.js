@@ -4,20 +4,8 @@ const Message = require("../models/messageModel");
 const Chat = require("../models/chatModel");
 const { hybridEncrypt, hybridDecrypt } = require("../utils/encryptionUtils");
 const dotenv = require("dotenv");
-const fs = require("fs");
-const path = require("path");
 
 dotenv.config();
-
-// .env'deki yolları kullanarak dosyaları oku
-const privateKey = fs.readFileSync(
-  path.resolve(process.env.PRIVATE_KEY_PATH),
-  "utf8"
-);
-const publicKey = fs.readFileSync(
-  path.resolve(process.env.PUBLIC_KEY_PATH),
-  "utf8"
-);
 
 //@description     Get all Messages
 //@route           GET /api/Message/:chatId
