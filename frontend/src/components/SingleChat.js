@@ -15,8 +15,9 @@ import io from "socket.io-client";
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
 import { MdSend } from "react-icons/md";
+import { encryptMessage, decryptMessage } from "../utils";
 
-const ENDPOINT = process.env.REACT_APP_API_ENDPOINT || "http://localhost:5000";
+const ENDPOINT = process.env.REACT_APP_API_ENDPOINT || "http://localhost:4000";
 
 var socket, selectedChatCompare;
 
@@ -58,6 +59,14 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         config
       );
 
+      for (let index = 0; index < data.length; index++) {
+        const message = data[index];
+        const content =
+          message.sender._id === user._id
+            ? message.content[0]
+            : message.content[1];
+        message.content = await decryptMessage(content);
+      }
       setMessages(data);
       setLoading(false);
 
@@ -75,8 +84,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   };
 
   const sendMessage = async () => {
-    if (newMessage) {
+    const targetUser = selectedChat.users.find((u) => u._id !== user._id);
+    if (newMessage && targetUser) {
       socket.emit("stop typing", selectedChat._id);
+
       try {
         const config = {
           headers: {
@@ -85,15 +96,23 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           },
         };
         setNewMessage("");
+        const content = [
+          await encryptMessage(newMessage, user.publicKey),
+          await encryptMessage(newMessage, targetUser.publicKey),
+        ];
         const { data } = await axios.post(
           "/api/message",
           {
-            content: newMessage,
+            content,
             chatId: selectedChat,
           },
           config
         );
         socket.emit("new message", data);
+
+        data.content = await decryptMessage(
+          data.sender._id === user._id ? data.content[0] : data.content[1]
+        );
         setMessages([...messages, data]);
       } catch (error) {
         let errorMessage = "Failed to send the message";
@@ -138,7 +157,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   }, [selectedChat]);
 
   useEffect(() => {
-    socket.on("message received", (newMessageReceived) => {
+    socket.on("message received", async (newMessageReceived) => {
       if (
         !selectedChatCompare ||
         selectedChatCompare._id !== newMessageReceived.chat._id
@@ -148,6 +167,11 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           setFetchAgain(!fetchAgain);
         }
       } else {
+        newMessageReceived.content = await decryptMessage(
+          newMessageReceived.sender._id === user._id
+            ? newMessageReceived.content[0]
+            : newMessageReceived.content[1]
+        );
         setMessages([...messages, newMessageReceived]);
       }
     });

@@ -8,6 +8,7 @@ import { useState } from "react";
 import { useHistory } from "react-router";
 import { ChatState } from "../../Context/ChatProvider";
 import { Eye, EyeOff } from "lucide-react";
+import { generateKeys } from "../../utils";
 
 const Signup = () => {
   const [show, setShow] = useState(false);
@@ -84,6 +85,8 @@ const Signup = () => {
       setPicLoading(false);
       return;
     }
+
+    const { publicKey } = await generateKeys();
     console.log(name, userName, email, password, pic);
     try {
       const config = {
@@ -99,6 +102,7 @@ const Signup = () => {
           email,
           password,
           pic,
+          publicKey,
         },
         config
       );

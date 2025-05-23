@@ -7,6 +7,7 @@ import { getSender } from "../config/ChatLogics";
 import ChatLoading from "./ChatLoading";
 import GroupChatModal from "./miscellaneous/GroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
+import { decryptMessage } from "../utils";
 
 const MyChats = ({ fetchAgain }) => {
   const [loggedUser, setLoggedUser] = useState(null);
@@ -48,6 +49,17 @@ const MyChats = ({ fetchAgain }) => {
         headers: { Authorization: `Bearer ${user.token}` },
       };
       const { data } = await axios.get("/api/chat", config);
+      console.log("Chatler:", data);
+      for (let index = 0; index < data.length; index++) {
+        const message = data[index]?.latestMessage;
+        if (message) {
+          const content =
+            message.sender._id === user._id
+              ? message.content[0]
+              : message.content[1];
+          message.content = await decryptMessage(content);
+        }
+      }
       setChats(data);
     } catch (error) {
       console.error("Chatleri çekerken hata oluştu:", error);

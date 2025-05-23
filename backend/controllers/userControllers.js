@@ -20,9 +20,9 @@ const allUsers = asyncHandler(async (req, res) => {
 
 // POST /api/user/
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, userName, email, password, pic } = req.body;
+  const { name, userName, email, password, pic, publicKey } = req.body;
 
-  if (!name || !userName || !email || !password) {
+  if (!name || !userName || !email || !password || !publicKey) {
     res.status(400);
     throw new Error("Please Enter all the Fields");
   }
@@ -45,6 +45,7 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     password,
     pic,
+    publicKey,
   });
 
   if (user) {

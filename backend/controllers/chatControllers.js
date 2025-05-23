@@ -1,7 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Chat = require("../models/chatModel");
 const User = require("../models/userModel");
-const { hybridDecrypt } = require("../utils/encryptionUtils");
 
 //@description     Create or fetch One to One Chat
 //@route           POST /api/chat/
@@ -58,26 +57,12 @@ const accessChat = asyncHandler(async (req, res) => {
 const fetchChats = asyncHandler(async (req, res) => {
   try {
     const chats = await Chat.find({
-      $or: [{ isGroupChat: true }, { latestMessage: { $exists: true } }],
       users: { $elemMatch: { $eq: req.user._id } },
     })
       .populate("users", "-password")
       .populate("groupAdmin", "-password")
       .populate("latestMessage")
       .sort({ updatedAt: -1 });
-
-    // Şifre çözme işlemi: latestMessage içeriklerini deşifre et
-    for (let chat of chats) {
-      if (chat.latestMessage) {
-        // Şifreli mesaj varsa çöz
-        const decryptedMessage = hybridDecrypt(
-          chat.latestMessage.content,
-          chat.latestMessage.encryptedKey,
-          chat.latestMessage.iv
-        );
-        chat.latestMessage.content = decryptedMessage;
-      }
-    }
 
     const populatedChats = await User.populate(chats, {
       path: "latestMessage.sender",

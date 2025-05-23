@@ -2,8 +2,9 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const Message = require("../models/messageModel");
 const Chat = require("../models/chatModel");
-const { hybridEncrypt, hybridDecrypt } = require("../utils/encryptionUtils");
 const dotenv = require("dotenv");
+const fs = require("fs");
+const path = require("path");
 
 dotenv.config();
 
@@ -30,12 +31,7 @@ const allMessages = asyncHandler(async (req, res) => {
       .populate("sender", "name userName pic email")
       .populate("chat");
 
-    const decryptedMessages = messages.map((msg) => ({
-      ...msg.toObject(),
-      content: hybridDecrypt(msg.content, msg.encryptedKey, msg.iv), // Decrypt message content here
-    }));
-
-    res.json(decryptedMessages);
+    res.json(messages);
   } catch (error) {
     console.error("Hata oluştu:", error);
     res.status(400).json({ message: error.message });
@@ -68,14 +64,9 @@ const sendMessage = asyncHandler(async (req, res) => {
     });
   }
 
-  // Encrypt message with hybrid encryption
-  const { encryptedMessage, encryptedKey, iv } = hybridEncrypt(content);
-
   const newMessage = {
     sender: req.user._id,
-    content: encryptedMessage,
-    encryptedKey: encryptedKey,
-    iv: iv,
+    content,
     chat: chatId,
   };
 
@@ -90,10 +81,7 @@ const sendMessage = asyncHandler(async (req, res) => {
 
     await Chat.findByIdAndUpdate(req.body.chatId, { latestMessage: message });
 
-    res.json({
-      ...message.toObject(),
-      content: hybridDecrypt(message.content, message.encryptedKey, message.iv), // Decrypt message content here before sending it back
-    });
+    res.json(message.toObject());
   } catch (error) {
     console.error("Mesaj gönderme hatası:", error);
     res.status(400).json({ message: error.message });
