@@ -17,7 +17,7 @@ import { ChatState } from "../Context/ChatProvider";
 import { MdSend } from "react-icons/md";
 import { encryptMessage, decryptMessage } from "../utils";
 
-const ENDPOINT = process.env.REACT_APP_API_ENDPOINT || "http://localhost:4000";
+const ENDPOINT = "http://localhost:5000";
 
 var socket, selectedChatCompare;
 
