@@ -49,7 +49,7 @@ const MyChats = ({ fetchAgain }) => {
         headers: { Authorization: `Bearer ${user.token}` },
       };
       const { data } = await axios.get("/api/chat", config);
-      console.log("Chatler:", data);
+
       for (let index = 0; index < data.length; index++) {
         const message = data[index]?.latestMessage;
         if (message) {
