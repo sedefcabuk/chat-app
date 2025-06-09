@@ -24,19 +24,19 @@ const registerUser = asyncHandler(async (req, res) => {
 
   if (!name || !userName || !email || !password || !publicKey) {
     res.status(400);
-    throw new Error("Please Enter all the Fields");
+    throw new Error("Lütfen gerekli alanları doldurun");
   }
 
   const userNameExists = await User.findOne({ userName });
   if (userNameExists) {
     res.status(400);
-    throw new Error("Username already exists");
+    throw new Error("Kullanıcı zaten kullanılıyor");
   }
 
   const userExists = await User.findOne({ email });
   if (userExists) {
     res.status(400);
-    throw new Error("Email already exists");
+    throw new Error("Email zaten kullanılıyor");
   }
 
   const user = await User.create({
@@ -109,12 +109,14 @@ const updateProfile = async (req, res) => {
       existingUserName &&
       existingUserName._id.toString() !== user._id.toString()
     ) {
-      return res.status(400).json({ message: "Username already exists!" });
+      return res
+        .status(400)
+        .json({ message: "Kullanıcı adı zaten kullanılıyor!" });
     }
 
     const existingEmail = await User.findOne({ email });
     if (existingEmail && existingEmail._id.toString() !== user._id.toString()) {
-      return res.status(400).json({ message: "Email already exists!" });
+      return res.status(400).json({ message: "E-posta zaten kullanılıyor!" });
     }
 
     user.name = name || user.name;

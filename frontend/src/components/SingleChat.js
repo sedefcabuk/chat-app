@@ -17,7 +17,7 @@ import { ChatState } from "../Context/ChatProvider";
 import { MdSend } from "react-icons/md";
 import { encryptMessage, decryptMessage } from "../utils";
 
-const ENDPOINT = "http://localhost:5000";
+const ENDPOINT = "https://chatterly-lrhs.onrender.com";
 
 var socket, selectedChatCompare;
 
