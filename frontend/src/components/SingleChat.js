@@ -178,7 +178,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         setMessages((prevMessages) => [...prevMessages, newMessageReceived]);
       }
     });
-  }, [notification, fetchAgain, selectedChatCompare]);
+  }, []);
 
   const typingHandler = (e) => {
     setNewMessage(e.target.value);
