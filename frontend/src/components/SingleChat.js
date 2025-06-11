@@ -175,10 +175,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             ? newMessageReceived.content[0]
             : newMessageReceived.content[1]
         );
-        setMessages([...messages, newMessageReceived]);
+        setMessages((prevMessages) => [...prevMessages, newMessageReceived]);
       }
     });
-  });
+  }, [notification, fetchAgain, selectedChatCompare]);
 
   const typingHandler = (e) => {
     setNewMessage(e.target.value);
