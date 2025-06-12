@@ -191,7 +191,7 @@ function SideDrawer() {
                   label={user.name}
                 />
                 <Text fontSize="0.75rem" fontFamily="Work sans">
-                  {user.name}
+                  {user.userName}
                 </Text>
               </Box>
             </MenuButton>
@@ -229,6 +229,7 @@ function SideDrawer() {
                 mr={2}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                autoComplete="off"
               />
               <Button onClick={handleSearch}>
                 <Search size={20} />

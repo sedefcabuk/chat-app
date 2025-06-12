@@ -248,6 +248,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
                 mb={3}
                 value={groupChatName}
                 onChange={(e) => setGroupChatName(e.target.value)}
+                autoComplete="off"
               />
               <Button
                 variant="solid"
@@ -264,6 +265,7 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
                 placeholder="Kullanıcı Ara"
                 mb={1}
                 onChange={(e) => handleSearch(e.target.value)}
+                autoComplete="off"
               />
             </FormControl>
 

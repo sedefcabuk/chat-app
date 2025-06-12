@@ -61,7 +61,7 @@ const Login = () => {
       history.push("/chats");
     } catch (error) {
       toast({
-        title: "Error Occured!",
+        title: "",
         description: error.response.data.message,
         status: "error",
         duration: 5000,
@@ -88,6 +88,7 @@ const Login = () => {
           placeholder=""
           onChange={(e) => setIdentifier(e.target.value)}
           onKeyDown={handleKeyPress}
+          autoComplete="off"
         />
       </FormControl>
       <FormControl id="password" isRequired>
@@ -99,6 +100,7 @@ const Login = () => {
             type={show ? "text" : "password"}
             placeholder=""
             onKeyDown={handleKeyPress}
+            autoComplete="off"
           />
           <InputRightElement width="4.5rem">
             <Button h="1.75rem" size="sm" onClick={handleClick}>

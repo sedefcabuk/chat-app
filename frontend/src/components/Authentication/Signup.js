@@ -123,7 +123,7 @@ const Signup = () => {
       history.push("/chats");
     } catch (error) {
       toast({
-        title: "Error Occured!",
+        title: "",
         description: error.response.data.message,
         status: "error",
         duration: 5000,
@@ -192,6 +192,7 @@ const Signup = () => {
           placeholder=""
           onChange={(e) => setName(e.target.value)}
           onKeyDown={handleKeyDown}
+          autoComplete="off"
         />
       </FormControl>
       <FormControl id="userName" isRequired>
@@ -200,6 +201,7 @@ const Signup = () => {
           placeholder=""
           onChange={(e) => setUserName(e.target.value)}
           onKeyDown={handleKeyDown}
+          autoComplete="off"
         />
       </FormControl>
       <FormControl id="email" isRequired>
@@ -209,6 +211,7 @@ const Signup = () => {
           placeholder=""
           onChange={(e) => setEmail(e.target.value)}
           onKeyDown={handleKeyDown}
+          autoComplete="off"
         />
       </FormControl>
       <FormControl id="password" isRequired>
@@ -219,6 +222,7 @@ const Signup = () => {
             placeholder=""
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={handleKeyDown}
+            autoComplete="off"
           />
           <InputRightElement width="4.5rem">
             <Button h="1.75rem" size="sm" onClick={handleClick}>
@@ -235,6 +239,7 @@ const Signup = () => {
             placeholder=""
             onChange={(e) => setConfirmpassword(e.target.value)}
             onKeyDown={handleKeyDown}
+            autoComplete="off"
           />
           <InputRightElement width="4.5rem">
             <Button h="1.75rem" size="sm" onClick={handleClick}>

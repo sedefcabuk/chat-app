@@ -193,6 +193,7 @@ const UpdateProfileModal = ({ setUser }) => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={handleKeyDown}
+                autoComplete="off"
               />
             </FormControl>
 
@@ -203,6 +204,7 @@ const UpdateProfileModal = ({ setUser }) => {
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
                 onKeyDown={handleKeyDown}
+                autoComplete="off"
               />
             </FormControl>
             <FormControl mt={3}>
@@ -212,6 +214,7 @@ const UpdateProfileModal = ({ setUser }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={handleKeyDown}
+                autoComplete="off"
               />
             </FormControl>
 

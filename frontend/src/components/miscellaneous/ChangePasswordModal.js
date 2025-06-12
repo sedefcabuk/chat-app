@@ -137,6 +137,7 @@ const ChangePasswordModal = () => {
                   value={oldPassword}
                   onChange={(e) => setOldPassword(e.target.value)}
                   onKeyDown={handleKeyDown}
+                  autoComplete="off"
                 />
                 <InputRightElement width="4.5rem">
                   <Button
@@ -158,6 +159,7 @@ const ChangePasswordModal = () => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   onKeyDown={handleKeyDown}
+                  autoComplete="off"
                 />
                 <InputRightElement width="4.5rem">
                   <Button
@@ -179,6 +181,7 @@ const ChangePasswordModal = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   onKeyDown={handleKeyDown}
+                  autoComplete="off"
                 />
                 <InputRightElement width="4.5rem">
                   <Button
