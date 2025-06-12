@@ -22,8 +22,7 @@ const ENDPOINT =
     ? "https://chatterly-lrhs.onrender.com"
     : "http://localhost:5000";
 
-let socket;
-let selectedChatCompare;
+var socket, selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [messages, setMessages] = useState([]);
@@ -63,23 +62,22 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         config
       );
 
-      for (let i = 0; i < data.length; i++) {
-        const message = data[i];
+      for (let index = 0; index < data.length; index++) {
+        const message = data[index];
         const content =
           message.sender._id === user._id
             ? message.content[0]
             : message.content[1];
         message.content = await decryptMessage(content);
       }
-
       setMessages(data);
       setLoading(false);
 
       socket.emit("join chat", selectedChat._id);
     } catch (error) {
       toast({
-        title: "Error Occurred!",
-        description: "Failed to load the messages",
+        title: "Error Occured!",
+        description: "Failed to Load the Messages",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -89,10 +87,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim()) return; // boş mesaj gönderilmesin
-
     const targetUser = selectedChat.users.find((u) => u._id !== user._id);
-    if (targetUser) {
+    if (newMessage && targetUser) {
       socket.emit("stop typing", selectedChat._id);
 
       try {
@@ -102,35 +98,32 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             Authorization: `Bearer ${user.token}`,
           },
         };
-
+        setNewMessage("");
         const content = [
           await encryptMessage(newMessage, user.publicKey),
           await encryptMessage(newMessage, targetUser.publicKey),
         ];
-
         const { data } = await axios.post(
           "/api/message",
           {
             content,
-            chatId: selectedChat._id,
+            chatId: selectedChat,
           },
           config
         );
-
         socket.emit("new message", data);
 
         data.content = await decryptMessage(
           data.sender._id === user._id ? data.content[0] : data.content[1]
         );
-
         setMessages([...messages, data]);
-        setNewMessage("");
       } catch (error) {
         let errorMessage = "Failed to send the message";
         if (error.response && error.response.status === 403) {
           errorMessage =
             "Since you are no longer a member of this group, you cannot send messages to the group.";
         }
+
         toast({
           description: errorMessage,
           status: "warning",
@@ -156,25 +149,23 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     socket.on("typing", () => setIsTyping(true));
     socket.on("stop typing", () => setIsTyping(false));
 
-    return () => {
-      socket.disconnect();
-    };
     // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
     fetchMessages();
+
     selectedChatCompare = selectedChat;
     // eslint-disable-next-line
   }, [selectedChat]);
 
   useEffect(() => {
-    const messageHandler = async (newMessageReceived) => {
+    socket.on("message received", async (newMessageReceived) => {
       if (
         !selectedChatCompare ||
         selectedChatCompare._id !== newMessageReceived.chat._id
       ) {
-        if (!notification.find((n) => n._id === newMessageReceived._id)) {
+        if (!notification.includes(newMessageReceived)) {
           setNotification([newMessageReceived, ...notification]);
           setFetchAgain(!fetchAgain);
         }
@@ -184,17 +175,10 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             ? newMessageReceived.content[0]
             : newMessageReceived.content[1]
         );
-        setMessages((prevMessages) => [...prevMessages, newMessageReceived]);
+        setMessages([...messages, newMessageReceived]);
       }
-    };
-
-    socket.on("message received", messageHandler);
-
-    return () => {
-      socket.off("message received", messageHandler);
-    };
-    // eslint-disable-next-line
-  }, [messages, notification, fetchAgain]);
+    });
+  });
 
   const typingHandler = (e) => {
     setNewMessage(e.target.value);
@@ -205,13 +189,11 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       setTyping(true);
       socket.emit("typing", selectedChat._id);
     }
-
-    const lastTypingTime = new Date().getTime();
-    const timerLength = 3000;
-
+    let lastTypingTime = new Date().getTime();
+    var timerLength = 3000;
     setTimeout(() => {
-      const timeNow = new Date().getTime();
-      const timeDiff = timeNow - lastTypingTime;
+      var timeNow = new Date().getTime();
+      var timeDiff = timeNow - lastTypingTime;
       if (timeDiff >= timerLength && typing) {
         socket.emit("stop typing", selectedChat._id);
         setTyping(false);
@@ -236,8 +218,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             <IconButton
               display={{ base: "flex", md: "none" }}
               icon={<ArrowBackIcon />}
-              onClick={() => setSelectedChat(null)}
-              aria-label="Go Back"
+              onClick={() => setSelectedChat("")}
             />
             {messages &&
               (!selectedChat.isGroupChat ? (
@@ -278,16 +259,13 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                 margin="auto"
               />
             ) : (
-              <div
-                className="messages"
-                style={{ overflowY: "scroll", height: "100%" }}
-              >
+              <div className="messages">
                 <ScrollableChat messages={messages} />
               </div>
             )}
 
             <FormControl id="first-name" isRequired mt={3}>
-              {istyping && (
+              {istyping ? (
                 <div>
                   <Lottie
                     options={defaultOptions}
@@ -295,6 +273,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                     style={{ marginBottom: 15, marginLeft: 0 }}
                   />
                 </div>
+              ) : (
+                <></>
               )}
               <HStack>
                 <Input
