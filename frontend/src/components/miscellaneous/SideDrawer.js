@@ -174,20 +174,26 @@ function SideDrawer() {
                   }}
                 >
                   {notif.chat.isGroupChat
-                    ? `New Message in ${notif.chat.chatName}`
-                    : `New Message from ${getSender(user, notif.chat.users)}`}
+                    ? `Yeni mesaj ${notif.chat.chatName}`
+                    : `Yeni mesaj ${getSender(user, notif.chat.users)}`}
                 </MenuItem>
               ))}
             </MenuList>
           </Menu>
           <Menu>
             <MenuButton as={Button} bg="white" rightIcon={<ChevronDownIcon />}>
-              <Avatar
-                size="sm"
-                cursor="pointer"
-                name={user.name}
-                src={user.pic}
-              />
+              <Box textAlign="center">
+                <Avatar
+                  size="xs"
+                  cursor="pointer"
+                  name={user.name}
+                  src={user.pic}
+                  label={user.name}
+                />
+                <Text fontSize="0.75rem" fontFamily="Work sans">
+                  {user.name}
+                </Text>
+              </Box>
             </MenuButton>
             <MenuList>
               <UpdateProfileModal
