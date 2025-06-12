@@ -160,14 +160,17 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   }, [selectedChat]);
 
   useEffect(() => {
-    socket.on("message received", async (newMessageReceived) => {
+    const handleMessageReceived = async (newMessageReceived) => {
       if (
         !selectedChatCompare ||
         selectedChatCompare._id !== newMessageReceived.chat._id
       ) {
-        if (!notification.includes(newMessageReceived)) {
-          setNotification([newMessageReceived, ...notification]);
-          setFetchAgain(!fetchAgain);
+        const alreadyExists = notification.some(
+          (n) => n._id === newMessageReceived._id
+        );
+        if (!alreadyExists) {
+          setNotification((prev) => [newMessageReceived, ...prev]);
+          setFetchAgain((prev) => !prev);
         }
       } else {
         newMessageReceived.content = await decryptMessage(
@@ -175,10 +178,17 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             ? newMessageReceived.content[0]
             : newMessageReceived.content[1]
         );
-        setMessages([...messages, newMessageReceived]);
+        setMessages((prev) => [...prev, newMessageReceived]);
       }
-    });
-  });
+    };
+
+    socket.on("message received", handleMessageReceived);
+
+    // Temizlik: aynı event'e birden fazla listener eklenmesini önler
+    return () => {
+      socket.off("message received", handleMessageReceived);
+    };
+  }, [socket, selectedChatCompare, user, decryptMessage, notification]);
 
   const typingHandler = (e) => {
     setNewMessage(e.target.value);
