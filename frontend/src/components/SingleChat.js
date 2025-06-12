@@ -175,7 +175,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             ? newMessageReceived.content[0]
             : newMessageReceived.content[1]
         );
-        setMessages((prevMessages) => [...prevMessages, newMessageReceived]);
+        setMessages([...messages, newMessageReceived]);
       }
     });
   });
@@ -284,7 +284,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                   value={newMessage}
                   onChange={typingHandler}
                   onKeyDown={handleKeyPress}
-                  autoComplete="off"
                 />
                 <IconButton
                   icon={<MdSend />}
