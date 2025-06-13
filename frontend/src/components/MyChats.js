@@ -49,7 +49,6 @@ const MyChats = ({ fetchAgain }) => {
         headers: { Authorization: `Bearer ${user.token}` },
       };
       const { data } = await axios.get("/api/chat", config);
-
       for (let index = 0; index < data.length; index++) {
         const message = data[index]?.latestMessage;
         if (message) {
@@ -83,7 +82,8 @@ const MyChats = ({ fetchAgain }) => {
       bg="white"
       w={{ base: "100%", md: "31%" }}
       borderRadius="lg"
-      borderWidth="1px"
+      borderWidth="2px"
+      borderColor="blue.400"
     >
       <Box
         pb={3}
@@ -115,6 +115,7 @@ const MyChats = ({ fetchAgain }) => {
         h="100%"
         borderRadius="lg"
         overflowY="hidden"
+        borderColor="blue.200"
       >
         {chats ? (
           <Stack overflowY="scroll">
@@ -122,8 +123,8 @@ const MyChats = ({ fetchAgain }) => {
               <Box
                 onClick={() => setSelectedChat(chat)}
                 cursor="pointer"
-                bg={selectedChat === chat ? "#38B2AC" : "#E8E8E8"}
-                color={selectedChat === chat ? "white" : "black"}
+                bg={selectedChat === chat ? "blue.100" : "#E8E8E8"}
+                color={selectedChat === chat ? "black" : "black"}
                 px={3}
                 py={2}
                 borderRadius="lg"

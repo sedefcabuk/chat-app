@@ -28,17 +28,26 @@ function Homepage() {
         display="flex"
         justifyContent="center"
         p={3}
-        bg="white"
+        bg="blue.100"
         w="100%"
         m="10px 0 10px 0"
         borderRadius="lg"
         borderWidth="1px"
+        borderColor="blue.200"
+        bgGradient="linear(to-r, blue.300, purple.400)"
       >
         <Text fontSize="4xl" fontFamily="Work sans">
           Chatterly
         </Text>
       </Box>
-      <Box bg="white" w="100%" p={4} borderRadius="lg" borderWidth="1px">
+      <Box
+        bg="white"
+        w="100%"
+        p={4}
+        borderRadius="lg"
+        borderWidth="1px"
+        borderColor="blue.200"
+      >
         <Tabs isFitted variant="soft-rounded">
           <TabList mb="1em">
             <Tab>Giriş Yap</Tab>

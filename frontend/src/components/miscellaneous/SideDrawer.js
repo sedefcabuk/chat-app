@@ -134,10 +134,12 @@ function SideDrawer() {
         display="flex"
         justifyContent="space-between"
         alignItems="center"
-        bg="white"
+        bg="blue.100"
         w="100%"
         p="5px 10px 5px 10px"
-        borderWidth="5px"
+        borderWidth="2px"
+        borderColor="blue.400"
+        bgGradient="linear(to-r, blue.300, purple.400)"
       >
         <Tooltip
           label="Sohbete başlamak için kullanıcı ara"

@@ -222,39 +222,39 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             w="100%"
             fontFamily="Work sans"
             display="flex"
-            justifyContent={{ base: "space-between" }}
+            justifyContent="flex-start"
             alignItems="center"
+            gap={2} // isteğe bağlı: isimle ikon arası boşluk
           >
             <IconButton
               display={{ base: "flex", md: "none" }}
               icon={<ArrowBackIcon />}
               onClick={() => setSelectedChat("")}
+              mr={2}
             />
-            {messages &&
-              (!selectedChat.isGroupChat ? (
-                <>
-                  {getSender(user, selectedChat.users)}
-                  <ProfileModal
-                    user={getSenderFull(user, selectedChat.users)}
-                  />
-                </>
-              ) : (
-                <>
-                  {selectedChat.chatName.toUpperCase()}
-                  <UpdateGroupChatModal
-                    fetchMessages={fetchMessages}
-                    fetchAgain={fetchAgain}
-                    setFetchAgain={setFetchAgain}
-                  />
-                </>
-              ))}
+            {!selectedChat.isGroupChat ? (
+              <HStack spacing={2}>
+                <Text>{getSender(user, selectedChat.users)}</Text>
+                <ProfileModal user={getSenderFull(user, selectedChat.users)} />
+              </HStack>
+            ) : (
+              <HStack spacing={2}>
+                <Text>{selectedChat.chatName.toUpperCase()}</Text>
+                <UpdateGroupChatModal
+                  fetchMessages={fetchMessages}
+                  fetchAgain={fetchAgain}
+                  setFetchAgain={setFetchAgain}
+                />
+              </HStack>
+            )}
           </Text>
+
           <Box
             display="flex"
             flexDir="column"
             justifyContent="flex-end"
             p={3}
-            bg="#E8E8E8"
+            bg="#F3F7FFFF"
             w="100%"
             h="100%"
             borderRadius="lg"
@@ -294,6 +294,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                   value={newMessage}
                   onChange={typingHandler}
                   onKeyDown={handleKeyPress}
+                  autoComplete="off"
                 />
                 <IconButton
                   icon={<MdSend />}
