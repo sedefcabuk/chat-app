@@ -1,24 +1,22 @@
-// Metni ArrayBuffer'a dönüştürme
+// ==== Yardımcı Fonksiyonlar ====
+
 export function str2ab(str) {
   const buf = new ArrayBuffer(str.length);
   const bufView = new Uint8Array(buf);
-  for (let i = 0, strLen = str.length; i < strLen; i++) {
+  for (let i = 0; i < str.length; i++) {
     bufView[i] = str.charCodeAt(i);
   }
   return buf;
 }
 
-// ArrayBuffer'ı metne dönüştürme
 export function ab2str(buf) {
   return String.fromCharCode.apply(null, new Uint8Array(buf));
 }
 
-// ArrayBuffer'ı Base64'e dönüştürme
 function ab2base64(buf) {
   return btoa(String.fromCharCode.apply(null, new Uint8Array(buf)));
 }
 
-// Base64'ü ArrayBuffer'a dönüştürme
 function base642ab(base64) {
   const byteString = atob(base64);
   const len = byteString.length;
@@ -29,8 +27,19 @@ function base642ab(base64) {
   return bytes.buffer;
 }
 
-// 1. Anahtar Çifti Oluşturma
+// ==== Anahtar İşlemleri ====
+
 export async function generateKeys() {
+  const existingPublic = localStorage.getItem("userPublicKey");
+  const existingPrivate = localStorage.getItem("userPrivateKey");
+
+  if (existingPublic && existingPrivate) {
+    return {
+      publicKey: existingPublic,
+      privateKey: existingPrivate,
+    };
+  }
+
   try {
     const userKeyPair = await window.crypto.subtle.generateKey(
       {
@@ -47,7 +56,6 @@ export async function generateKeys() {
       "jwk",
       userKeyPair.publicKey
     );
-
     const privateKeyJwk = await window.crypto.subtle.exportKey(
       "jwk",
       userKeyPair.privateKey
@@ -70,7 +78,8 @@ function getPrivateKey() {
   return localStorage.getItem("userPrivateKey");
 }
 
-// AES anahtarı oluşturma
+// ==== AES İşlemleri ====
+
 async function generateAesKey() {
   return await window.crypto.subtle.generateKey(
     { name: "AES-GCM", length: 256 },
@@ -79,12 +88,10 @@ async function generateAesKey() {
   );
 }
 
-// AES anahtarını raw formatına çevirme (ArrayBuffer)
 async function exportAesKeyRaw(aesKey) {
   return await window.crypto.subtle.exportKey("raw", aesKey);
 }
 
-// Raw AES anahtarını import etme
 async function importAesKeyRaw(rawKey) {
   return await window.crypto.subtle.importKey(
     "raw",
@@ -95,8 +102,8 @@ async function importAesKeyRaw(rawKey) {
   );
 }
 
-// 2. Mesaj Şifreleme (Hibrit)
-// Mesajı AES ile şifrele, AES anahtarını RSA ile şifrele ve ikisini birlikte base64'le döndür
+// ==== Mesaj Şifreleme ====
+
 export async function encryptMessage(message, publicKeyJwkStr) {
   try {
     if (!publicKeyJwkStr) {
@@ -108,84 +115,71 @@ export async function encryptMessage(message, publicKeyJwkStr) {
       return;
     }
 
-    const publicKeyJwk = JSON.parse(publicKeyJwkStr);
+    let publicKeyJwk;
+    try {
+      publicKeyJwk = JSON.parse(publicKeyJwkStr);
+      if (!publicKeyJwk.kty || publicKeyJwk.kty !== "RSA") {
+        throw new Error("Geçersiz açık anahtar formatı.");
+      }
+    } catch (e) {
+      alert("Açık anahtar geçersiz ya da hatalı formatta.");
+      return;
+    }
 
     const publicKey = await window.crypto.subtle.importKey(
       "jwk",
       publicKeyJwk,
-      {
-        name: "RSA-OAEP",
-        hash: "SHA-256",
-      },
+      { name: "RSA-OAEP", hash: "SHA-256" },
       true,
       ["encrypt"]
     );
 
-    // 1. AES anahtarı oluştur
     const aesKey = await generateAesKey();
-
-    // 2. Mesajı AES-GCM ile şifrele (iv gerekiyor)
+    const iv = window.crypto.getRandomValues(new Uint8Array(12));
     const encoder = new TextEncoder();
     const encodedMessage = encoder.encode(message);
 
-    const iv = window.crypto.getRandomValues(new Uint8Array(12)); // 96-bit iv
-
     const encryptedMessageBuffer = await window.crypto.subtle.encrypt(
-      {
-        name: "AES-GCM",
-        iv: iv,
-      },
+      { name: "AES-GCM", iv: iv },
       aesKey,
       encodedMessage
     );
 
-    // 3. AES anahtarını raw formatta al
     const rawAesKey = await exportAesKeyRaw(aesKey);
 
-    // 4. AES anahtarını RSA ile şifrele
     const encryptedAesKeyBuffer = await window.crypto.subtle.encrypt(
-      {
-        name: "RSA-OAEP",
-      },
+      { name: "RSA-OAEP" },
       publicKey,
       rawAesKey
     );
 
-    // 5. Bileşenleri base64'e çevir
-    const encryptedAesKeyBase64 = ab2base64(encryptedAesKeyBuffer);
-    const ivBase64 = ab2base64(iv.buffer);
-    const encryptedMessageBase64 = ab2base64(encryptedMessageBuffer);
-
-    // 6. JSON objesi olarak döndür (iv, encryptedKey, encryptedMessage)
     const payload = {
-      encryptedAesKey: encryptedAesKeyBase64,
-      iv: ivBase64,
-      encryptedMessage: encryptedMessageBase64,
+      encryptedAesKey: ab2base64(encryptedAesKeyBuffer),
+      iv: ab2base64(iv.buffer),
+      encryptedMessage: ab2base64(encryptedMessageBuffer),
     };
 
     return JSON.stringify(payload);
   } catch (error) {
     console.error("Şifreleme hatası:", error);
-    alert(
-      "Mesaj şifrelenemedi: " +
-        error.message +
-        "\n Girilen açık anahtarın doğru formatta (JWK) ve RSA-OAEP için uygun olduğundan emin olun."
-    );
+    alert("Mesaj şifrelenemedi: " + error.message);
   }
 }
 
-// 3. Mesaj Çözme (Hibrit)
-// RSA ile AES anahtarını çöz, sonra AES-GCM ile mesajı çöz
+// ==== Mesaj Çözme ====
+
 export async function decryptMessage(encryptedBase64) {
   try {
     const privateKeyJwkStr = getPrivateKey();
-
     if (!privateKeyJwkStr) {
-      alert("Lütfen kullanıcının gizli anahtarını girin.");
+      alert(
+        "Bu cihazda gizli anahtar bulunamadı. Lütfen önce anahtar oluşturun."
+      );
       return;
     }
+
     if (!encryptedBase64) {
-      alert("Lütfen çözülecek şifreli bir mesaj girin.");
+      alert("Lütfen çözülecek şifreli mesajı girin.");
       return;
     }
 
@@ -194,52 +188,35 @@ export async function decryptMessage(encryptedBase64) {
     const privateKey = await window.crypto.subtle.importKey(
       "jwk",
       privateKeyJwk,
-      {
-        name: "RSA-OAEP",
-        hash: "SHA-256",
-      },
+      { name: "RSA-OAEP", hash: "SHA-256" },
       true,
       ["decrypt"]
     );
 
-    // JSON string'i parse et
     const payload = JSON.parse(encryptedBase64);
 
     const encryptedAesKeyBuffer = base642ab(payload.encryptedAesKey);
     const iv = new Uint8Array(base642ab(payload.iv));
     const encryptedMessageBuffer = base642ab(payload.encryptedMessage);
 
-    // 1. AES anahtarını RSA ile çöz
     const rawAesKey = await window.crypto.subtle.decrypt(
-      {
-        name: "RSA-OAEP",
-      },
+      { name: "RSA-OAEP" },
       privateKey,
       encryptedAesKeyBuffer
     );
 
-    // 2. Raw AES anahtarını CryptoKey objesine çevir
     const aesKey = await importAesKeyRaw(rawAesKey);
 
-    // 3. AES-GCM ile mesajı çöz
     const decryptedBuffer = await window.crypto.subtle.decrypt(
-      {
-        name: "AES-GCM",
-        iv: iv,
-      },
+      { name: "AES-GCM", iv: iv },
       aesKey,
       encryptedMessageBuffer
     );
 
     const decoder = new TextDecoder();
-    const decryptedMessage = decoder.decode(decryptedBuffer);
-    return decryptedMessage;
+    return decoder.decode(decryptedBuffer);
   } catch (error) {
     console.error("Çözme hatası:", error);
-    alert(
-      "Mesaj çözülemedi: " +
-        error.message +
-        "\n Girilen gizli anahtarın doğru formatta (JWK) ve bu mesajı şifreleyen açık anahtarın eşi olduğundan emin olun."
-    );
+    alert("Mesaj çözülemedi: " + error.message);
   }
 }
