@@ -8,8 +8,8 @@ const messageSchema = mongoose.Schema(
       required: true,
     },
     content: {
-      type: [String],
-      required: true, // AES ile şifrelenmiş mesaj içeriği
+      type: String,
+      required: true, // AES ile şifrelenmiş mesaj içeriği (JSON string)
     },
     chat: {
       type: mongoose.Schema.Types.ObjectId,
@@ -20,6 +20,8 @@ const messageSchema = mongoose.Schema(
   },
   { timestamps: true }
 );
+
+messageSchema.index({ chat: 1, createdAt: 1 });
 
 const Message = mongoose.model("Message", messageSchema);
 module.exports = Message;

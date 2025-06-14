@@ -14,6 +14,89 @@ const MyChats = ({ fetchAgain }) => {
   const { selectedChat, setSelectedChat, user, chats, setChats } = ChatState();
   const toast = useToast();
 
+  const getReceiverIndex = (chat, userId, senderId) => {
+    if (chat.isGroupChat) {
+      const userIndex = chat.users.findIndex((u) => u._id === userId);
+      return userIndex >= 0 ? userIndex : 0;
+    }
+    return senderId === userId ? 0 : 1;
+  };
+
+  const fetchChats = async () => {
+    if (!user?.token) {
+      console.log("Token bulunamadı, chatler yüklenmedi.");
+      return;
+    }
+
+    try {
+      const config = {
+        headers: { Authorization: `Bearer ${user.token}` },
+      };
+      const { data } = await axios.get("/api/chat", config);
+
+      // Son mesajları paralel olarak çöz
+      const decryptedChats = await Promise.all(
+        data.map(async (chat) => {
+          if (chat.latestMessage) {
+            let content = chat.latestMessage.content;
+            // Eski [String] formatıyla uyumluluk
+            if (Array.isArray(content)) {
+              content = content[0] || "";
+            }
+            const receiverIndex = getReceiverIndex(
+              chat,
+              user._id,
+              chat.latestMessage.sender._id
+            );
+            try {
+              // JSON formatını doğrula
+              let payload;
+              try {
+                payload = JSON.parse(content);
+              } catch {
+                chat.latestMessage.content =
+                  "[Mesaj çözülemedi: Geçersiz format]";
+                return chat;
+              }
+              // Alıcı indeksini doğrula
+              if (
+                receiverIndex < 0 ||
+                receiverIndex >= payload.encryptedAesKeys.length
+              ) {
+                chat.latestMessage.content =
+                  "[Mesaj çözülemedi: Geçersiz alıcı indeksi]";
+                return chat;
+              }
+              chat.latestMessage.content = await decryptMessage(
+                content,
+                receiverIndex
+              );
+            } catch (error) {
+              console.error("Mesaj çözme hatası:", error);
+              chat.latestMessage.content =
+                "[Mesaj çözülemedi: Anahtar uyumsuzluğu]";
+            }
+          }
+          return chat;
+        })
+      );
+
+      setChats(decryptedChats);
+    } catch (error) {
+      console.error("Chatleri çekerken hata oluştu:", error);
+      toast({
+        title: "Hata!",
+        description: `Sohbetleri yüklerken hata oluştu: ${
+          error.message || "Bilinmeyen hata"
+        }`,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom-left",
+      });
+    }
+  };
+
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("userInfo"));
     setLoggedUser(storedUser);
@@ -37,41 +120,6 @@ const MyChats = ({ fetchAgain }) => {
 
     fetchChats();
   }, [fetchAgain, user]);
-
-  const fetchChats = async () => {
-    if (!user?.token) {
-      console.log("Token bulunamadı, chatler yüklenmedi.");
-      return;
-    }
-
-    try {
-      const config = {
-        headers: { Authorization: `Bearer ${user.token}` },
-      };
-      const { data } = await axios.get("/api/chat", config);
-      for (let index = 0; index < data.length; index++) {
-        const message = data[index]?.latestMessage;
-        if (message) {
-          const content =
-            message.sender._id === user._id
-              ? message.content[0]
-              : message.content[1];
-          message.content = await decryptMessage(content);
-        }
-      }
-      setChats(data);
-    } catch (error) {
-      console.error("Chatleri çekerken hata oluştu:", error);
-      toast({
-        title: "Hata!",
-        description: "Sohbetleri yüklerken hata oluştu.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom-left",
-      });
-    }
-  };
 
   return (
     <Box

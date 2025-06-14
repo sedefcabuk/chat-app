@@ -10,7 +10,6 @@ import ProfileModal from "./miscellaneous/ProfileModal";
 import ScrollableChat from "./ScrollableChat";
 import Lottie from "react-lottie";
 import animationData from "../animations/typing.json";
-
 import io from "socket.io-client";
 import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
@@ -22,7 +21,7 @@ const ENDPOINT =
     ? "https://chatterly-lrhs.onrender.com"
     : "http://localhost:5000";
 
-var socket, selectedChatCompare;
+let socket, selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [messages, setMessages] = useState([]);
@@ -30,8 +29,11 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [newMessage, setNewMessage] = useState("");
   const [socketConnected, setSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
-  const [istyping, setIsTyping] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const toast = useToast();
+
+  const { selectedChat, setSelectedChat, user, notification, setNotification } =
+    ChatState();
 
   const defaultOptions = {
     loop: true,
@@ -42,8 +44,27 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     },
   };
 
-  const { selectedChat, setSelectedChat, user, notification, setNotification } =
-    ChatState();
+  const getReceiverIndex = (chat, userId, senderId) => {
+    if (chat.isGroupChat) {
+      const userIndex = chat.users.findIndex((u) => u._id === userId);
+      return userIndex >= 0 ? userIndex : 0;
+    }
+    return senderId === userId ? 0 : 1;
+  };
+
+  const getValidPublicKeys = (chat, user) => {
+    const keys = chat.isGroupChat
+      ? chat.users.map((u) => u.publicKey)
+      : [user.publicKey, chat.users.find((u) => u._id !== user._id)?.publicKey];
+    return keys.filter((key) => {
+      try {
+        const parsed = JSON.parse(key);
+        return parsed.kty === "RSA" && parsed.n && parsed.e;
+      } catch {
+        return false;
+      }
+    });
+  };
 
   const fetchMessages = async () => {
     if (!selectedChat) return;
@@ -53,31 +74,64 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         headers: {
           Authorization: `Bearer ${user.token}`,
         },
+        withCredentials: true,
       };
 
       setLoading(true);
 
       const { data } = await axios.get(
-        `/api/message/${selectedChat._id}`,
+        `/api/message/${selectedChat._id}?page=1&limit=20`,
         config
       );
 
-      for (let index = 0; index < data.length; index++) {
-        const message = data[index];
-        const content =
-          message.sender._id === user._id
-            ? message.content[0]
-            : message.content[1];
-        message.content = await decryptMessage(content);
-      }
-      setMessages(data);
+      // Mesajları paralel olarak gönder
+      const decryptedMessages = await Promise.all(
+        data.map(async (message) => {
+          const receiverIndex = getReceiverIndex(
+            selectedChat,
+            user._id,
+            message.sender._id
+          );
+          try {
+            let payload;
+            try {
+              payload = JSON.parse(message.content);
+            } catch {
+              message.content = "[Mesaj çözülemedi: Geçersiz format]";
+              return message;
+            }
+            if (
+              receiverIndex < 0 ||
+              receiverIndex >= payload.encryptedAesKeys.length
+            ) {
+              message.content = "[Mesaj çözülemedi: Geçersiz alıcı indeksi]";
+              return message;
+            }
+            message.content = await decryptMessage(
+              message.content,
+              receiverIndex
+            );
+          } catch (error) {
+            console.error("Mesaj çözme hatası:", error);
+            message.content = "[Mesaj çözülemedi: Anahtar uyumsuzluğu]";
+          }
+          return message;
+        })
+      );
+
+      console.log(
+        "Mesaj sırası:",
+        decryptedMessages.map((m) => ({ id: m._id, createdAt: m.createdAt }))
+      );
+      setMessages(decryptedMessages);
       setLoading(false);
 
       socket.emit("join chat", selectedChat._id);
     } catch (error) {
       toast({
-        title: "Error Occured!",
-        description: "Failed to Load the Messages",
+        title: "Hata!",
+        description:
+          "Mesajlar yüklenemedi: " + (error.message || "Bilinmeyen hata"),
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -87,51 +141,62 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   };
 
   const sendMessage = async () => {
-    const targetUser = selectedChat.users.find((u) => u._id !== user._id);
-    if (newMessage && targetUser) {
-      socket.emit("stop typing", selectedChat._id);
+    if (!newMessage || !selectedChat) return;
 
-      try {
-        const config = {
-          headers: {
-            "Content-type": "application/json",
-            Authorization: `Bearer ${user.token}`,
-          },
-        };
-        setNewMessage("");
-        const content = [
-          await encryptMessage(newMessage, user.publicKey),
-          await encryptMessage(newMessage, targetUser.publicKey),
-        ];
-        const { data } = await axios.post(
-          "/api/message",
-          {
-            content,
-            chatId: selectedChat,
-          },
-          config
-        );
-        socket.emit("new message", data);
+    socket.emit("stop typing", selectedChat._id);
 
-        data.content = await decryptMessage(
-          data.sender._id === user._id ? data.content[0] : data.content[1]
-        );
-        setMessages([...messages, data]);
-      } catch (error) {
-        let errorMessage = "Failed to send the message";
-        if (error.response && error.response.status === 403) {
-          errorMessage =
-            "Since you are no longer a member of this group, you cannot send messages to the group.";
-        }
+    try {
+      const config = {
+        headers: {
+          "Content-type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+        withCredentials: true,
+      };
 
-        toast({
-          description: errorMessage,
-          status: "warning",
-          duration: 5000,
-          isClosable: true,
-          position: "bottom",
-        });
+      // Alıcıların açık anahtarlarını topla
+      const publicKeys = getValidPublicKeys(selectedChat, user);
+      if (publicKeys.length === 0) {
+        throw new Error("Hiçbir alıcı için geçerli açık anahtar bulunamadı.");
       }
+
+      setLoading(true); // Şifreleme için yükleme göstergesi
+      const content = await encryptMessage(newMessage, publicKeys);
+      setNewMessage("");
+
+      const { data } = await axios.post(
+        "/api/message",
+        {
+          content,
+          chatId: selectedChat._id,
+        },
+        config
+      );
+
+      // Gönderenin kendi mesajını çöz
+      data.content = await decryptMessage(data.content, 0);
+      setMessages([...messages, data]);
+      socket.emit("new message", data);
+    } catch (error) {
+      let errorMessage = "Mesaj gönderilemedi.";
+      if (error.response?.status === 403) {
+        errorMessage =
+          "Bu grupta artık üye olmadığınız için mesaj gönderemezsiniz.";
+      } else if (error.message.includes("anahtar")) {
+        errorMessage = "Alıcıların anahtarları geçersiz, mesaj gönderilemedi.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      toast({
+        description: errorMessage,
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -142,54 +207,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     }
   };
 
-  useEffect(() => {
-    socket = io(ENDPOINT);
-    socket.emit("setup", user);
-    socket.on("connected", () => setSocketConnected(true));
-    socket.on("typing", () => setIsTyping(true));
-    socket.on("stop typing", () => setIsTyping(false));
-
-    // eslint-disable-next-line
-  }, []);
-
-  useEffect(() => {
-    fetchMessages();
-
-    selectedChatCompare = selectedChat;
-    // eslint-disable-next-line
-  }, [selectedChat]);
-
-  useEffect(() => {
-    const handleMessageReceived = async (newMessageReceived) => {
-      if (
-        !selectedChatCompare ||
-        selectedChatCompare._id !== newMessageReceived.chat._id
-      ) {
-        const alreadyExists = notification.some(
-          (n) => n._id === newMessageReceived._id
-        );
-        if (!alreadyExists) {
-          setNotification((prev) => [newMessageReceived, ...prev]);
-          setFetchAgain((prev) => !prev);
-        }
-      } else {
-        newMessageReceived.content = await decryptMessage(
-          newMessageReceived.sender._id === user._id
-            ? newMessageReceived.content[0]
-            : newMessageReceived.content[1]
-        );
-        setMessages((prev) => [...prev, newMessageReceived]);
-      }
-    };
-
-    socket.on("message received", handleMessageReceived);
-
-    // Temizlik: aynı event'e birden fazla listener eklenmesini önler
-    return () => {
-      socket.off("message received", handleMessageReceived);
-    };
-  }, [socket, selectedChatCompare, user, decryptMessage, notification]);
-
   const typingHandler = (e) => {
     setNewMessage(e.target.value);
 
@@ -199,17 +216,105 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       setTyping(true);
       socket.emit("typing", selectedChat._id);
     }
-    let lastTypingTime = new Date().getTime();
-    var timerLength = 3000;
+
+    const lastTypingTime = new Date().getTime();
+    const timerLength = 3000;
     setTimeout(() => {
-      var timeNow = new Date().getTime();
-      var timeDiff = timeNow - lastTypingTime;
+      const timeNow = new Date().getTime();
+      const timeDiff = timeNow - lastTypingTime;
       if (timeDiff >= timerLength && typing) {
         socket.emit("stop typing", selectedChat._id);
         setTyping(false);
       }
     }, timerLength);
   };
+
+  useEffect(() => {
+    socket = io(ENDPOINT);
+    socket.emit("setup", user);
+    socket.on("connected", () => setSocketConnected(true));
+    socket.on("typing", () => setIsTyping(true));
+    socket.on("stop typing", () => setIsTyping(false));
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user]);
+
+  useEffect(() => {
+    fetchMessages();
+    selectedChatCompare = selectedChat;
+  }, [selectedChat]);
+
+  useEffect(() => {
+    const handleMessageReceived = async (newMessageReceived) => {
+      console.log("Socket mesajı:", newMessageReceived);
+      if (
+        !selectedChatCompare ||
+        selectedChatCompare._id !== newMessageReceived.chat._id
+      ) {
+        const alreadyExists = notification.some(
+          (n) => n._id === newMessageReceived._id
+        );
+        if (!alreadyExists) {
+          setNotification([newMessageReceived, ...notification]);
+          setFetchAgain(!fetchAgain);
+        }
+      } else {
+        const receiverIndex = getReceiverIndex(
+          selectedChat,
+          user._id,
+          newMessageReceived.sender._id
+        );
+        try {
+          let payload;
+          let content = newMessageReceived.content;
+          // content'in string olduğundan emin ol
+          if (typeof content !== "string") {
+            console.error("Geçersiz content türü:", typeof content, content);
+            content = JSON.stringify(content); // Obje veya dizi ise string'e çevir
+          }
+          try {
+            payload = JSON.parse(content);
+          } catch {
+            console.error("JSON parse hatası:", content);
+            newMessageReceived.content = "[Mesaj çözülemedi: Geçersiz format]";
+            setMessages([...messages, newMessageReceived]);
+            return;
+          }
+          if (
+            receiverIndex < 0 ||
+            receiverIndex >= payload.encryptedAesKeys.length
+          ) {
+            console.error(
+              "Geçersiz receiverIndex:",
+              receiverIndex,
+              payload.encryptedAesKeys
+            );
+            newMessageReceived.content =
+              "[Mesaj çözülemedi: Geçersiz alıcı indeksi]";
+            setMessages([...messages, newMessageReceived]);
+            return;
+          }
+          newMessageReceived.content = await decryptMessage(
+            content,
+            receiverIndex
+          );
+        } catch (error) {
+          console.error("Mesaj çözme hatası:", error);
+          newMessageReceived.content =
+            "[Mesaj çözülemedi: Anahtar uyumsuzluğu]";
+        }
+        setMessages([...messages, newMessageReceived]);
+      }
+    };
+
+    socket.on("message received", handleMessageReceived);
+
+    return () => {
+      socket.off("message received", handleMessageReceived);
+    };
+  }, [fetchAgain, notification, selectedChat, user, messages]);
 
   return (
     <>
@@ -224,7 +329,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             display="flex"
             justifyContent="flex-start"
             alignItems="center"
-            gap={2} // isteğe bağlı: isimle ikon arası boşluk
+            gap={2}
           >
             <IconButton
               display={{ base: "flex", md: "none" }}
@@ -275,7 +380,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             )}
 
             <FormControl id="first-name" isRequired mt={3}>
-              {istyping ? (
+              {isTyping ? (
                 <div>
                   <Lottie
                     options={defaultOptions}
@@ -301,6 +406,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
                   onClick={sendMessage}
                   colorScheme="blue"
                   aria-label="Send Message"
+                  isLoading={loading}
                 />
               </HStack>
             </FormControl>

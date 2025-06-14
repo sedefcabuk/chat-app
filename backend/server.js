@@ -18,6 +18,7 @@ app.use(
       process.env.NODE_ENV === "production"
         ? "https://chatterly-lrhs.onrender.com"
         : "http://localhost:3000",
+    credentials: true,
     methods: ["GET", "POST", "PUT"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -60,6 +61,7 @@ const io = require("socket.io")(server, {
       process.env.NODE_ENV === "production"
         ? "https://chatterly-lrhs.onrender.com"
         : "http://localhost:3000",
+    credentials: true,
   },
 });
 

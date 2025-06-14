@@ -30,7 +30,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const userNameExists = await User.findOne({ userName });
   if (userNameExists) {
     res.status(400);
-    throw new Error("Kullanıcı zaten kullanılıyor");
+    throw new Error("Kullanıcı adı zaten kullanılıyor");
   }
 
   const userExists = await User.findOne({ email });
