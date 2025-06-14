@@ -25,7 +25,7 @@ let socket, selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // const [loading, setLoading] = useState(false);  // loading kaldırıldı
   const [newMessage, setNewMessage] = useState("");
   const [socketConnected, setSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
@@ -77,14 +77,13 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         withCredentials: true,
       };
 
-      setLoading(true);
+      // setLoading(true);  // kaldırıldı
 
       const { data } = await axios.get(
-        `/api/message/${selectedChat._id}?page=1&limit=20`,
+        `/api/message/${selectedChat._id}`,
         config
       );
 
-      // Mesajları paralel olarak gönder
       const decryptedMessages = await Promise.all(
         data.map(async (message) => {
           const receiverIndex = getReceiverIndex(
@@ -118,13 +117,8 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           return message;
         })
       );
-
-      console.log(
-        "Mesaj sırası:",
-        decryptedMessages.map((m) => ({ id: m._id, createdAt: m.createdAt }))
-      );
       setMessages(decryptedMessages);
-      setLoading(false);
+      // setLoading(false);  // kaldırıldı
 
       socket.emit("join chat", selectedChat._id);
     } catch (error) {
@@ -154,13 +148,12 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         withCredentials: true,
       };
 
-      // Alıcıların açık anahtarlarını topla
       const publicKeys = getValidPublicKeys(selectedChat, user);
       if (publicKeys.length === 0) {
         throw new Error("Hiçbir alıcı için geçerli açık anahtar bulunamadı.");
       }
 
-      setLoading(true); // Şifreleme için yükleme göstergesi
+      // setLoading(true);  // kaldırıldı
       const content = await encryptMessage(newMessage, publicKeys);
       setNewMessage("");
 
@@ -173,9 +166,15 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         config
       );
 
-      // Gönderenin kendi mesajını çöz
       data.content = await decryptMessage(data.content, 0);
-      setMessages([...messages, data]);
+
+      setMessages((prevMessages) => {
+        if (!prevMessages.some((msg) => msg._id === data._id)) {
+          return [...prevMessages, data];
+        }
+        return prevMessages;
+      });
+
       socket.emit("new message", data);
     } catch (error) {
       let errorMessage = "Mesaj gönderilemedi.";
@@ -196,7 +195,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         position: "bottom",
       });
     } finally {
-      setLoading(false);
+      // setLoading(false);  // kaldırıldı
     }
   };
 
@@ -242,13 +241,14 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   }, [user]);
 
   useEffect(() => {
-    fetchMessages();
-    selectedChatCompare = selectedChat;
-  }, [selectedChat]);
+    if (selectedChat) {
+      fetchMessages();
+      selectedChatCompare = selectedChat;
+    }
+  }, [selectedChat?._id]);
 
   useEffect(() => {
     const handleMessageReceived = async (newMessageReceived) => {
-      console.log("Socket mesajı:", newMessageReceived);
       if (
         !selectedChatCompare ||
         selectedChatCompare._id !== newMessageReceived.chat._id
@@ -266,55 +266,75 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           user._id,
           newMessageReceived.sender._id
         );
+        let content = newMessageReceived.content;
         try {
-          let payload;
-          let content = newMessageReceived.content;
-          // content'in string olduğundan emin ol
           if (typeof content !== "string") {
-            console.error("Geçersiz content türü:", typeof content, content);
-            content = JSON.stringify(content); // Obje veya dizi ise string'e çevir
+            content = JSON.stringify(content);
           }
+          if (!content.startsWith("{")) {
+            newMessageReceived.content = content;
+            setMessages((prev) => {
+              if (!prev.some((msg) => msg._id === newMessageReceived._id)) {
+                return [...prev, newMessageReceived];
+              }
+              return prev;
+            });
+            return;
+          }
+          let payload;
           try {
             payload = JSON.parse(content);
           } catch {
-            console.error("JSON parse hatası:", content);
             newMessageReceived.content = "[Mesaj çözülemedi: Geçersiz format]";
-            setMessages([...messages, newMessageReceived]);
+            setMessages((prev) => {
+              if (!prev.some((msg) => msg._id === newMessageReceived._id)) {
+                return [...prev, newMessageReceived];
+              }
+              return prev;
+            });
             return;
           }
           if (
             receiverIndex < 0 ||
             receiverIndex >= payload.encryptedAesKeys.length
           ) {
-            console.error(
-              "Geçersiz receiverIndex:",
-              receiverIndex,
-              payload.encryptedAesKeys
-            );
             newMessageReceived.content =
               "[Mesaj çözülemedi: Geçersiz alıcı indeksi]";
-            setMessages([...messages, newMessageReceived]);
+            setMessages((prev) => {
+              if (!prev.some((msg) => msg._id === newMessageReceived._id)) {
+                return [...prev, newMessageReceived];
+              }
+              return prev;
+            });
             return;
           }
           newMessageReceived.content = await decryptMessage(
-            content,
+            newMessageReceived.content,
             receiverIndex
           );
+          setMessages((prev) => {
+            if (!prev.some((msg) => msg._id === newMessageReceived._id)) {
+              return [...prev, newMessageReceived];
+            }
+            return prev;
+          });
         } catch (error) {
-          console.error("Mesaj çözme hatası:", error);
           newMessageReceived.content =
             "[Mesaj çözülemedi: Anahtar uyumsuzluğu]";
+          setMessages((prev) => {
+            if (!prev.some((msg) => msg._id === newMessageReceived._id)) {
+              return [...prev, newMessageReceived];
+            }
+            return prev;
+          });
+          console.error("Mesaj çözme hatası:", error);
         }
-        setMessages([...messages, newMessageReceived]);
       }
     };
 
     socket.on("message received", handleMessageReceived);
-
-    return () => {
-      socket.off("message received", handleMessageReceived);
-    };
-  }, [fetchAgain, notification, selectedChat, user, messages]);
+    return () => socket.off("message received", handleMessageReceived);
+  }, [messages, notification]);
 
   return (
     <>
@@ -327,88 +347,65 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             w="100%"
             fontFamily="Work sans"
             display="flex"
-            justifyContent="flex-start"
+            justifyContent={{ base: "space-between" }}
             alignItems="center"
-            gap={2}
           >
             <IconButton
               display={{ base: "flex", md: "none" }}
               icon={<ArrowBackIcon />}
-              onClick={() => setSelectedChat("")}
-              mr={2}
+              onClick={() => setSelectedChat(null)}
             />
             {!selectedChat.isGroupChat ? (
-              <HStack spacing={2}>
-                <Text>{getSender(user, selectedChat.users)}</Text>
+              <>
+                {getSender(user, selectedChat.users)}
                 <ProfileModal user={getSenderFull(user, selectedChat.users)} />
-              </HStack>
+              </>
             ) : (
-              <HStack spacing={2}>
-                <Text>{selectedChat.chatName.toUpperCase()}</Text>
+              <>
+                {selectedChat.chatName.toUpperCase()}
                 <UpdateGroupChatModal
                   fetchMessages={fetchMessages}
                   fetchAgain={fetchAgain}
                   setFetchAgain={setFetchAgain}
                 />
-              </HStack>
+              </>
             )}
           </Text>
-
           <Box
             display="flex"
             flexDir="column"
             justifyContent="flex-end"
             p={3}
-            bg="#F3F7FFFF"
+            bg="#E8E8E8"
             w="100%"
             h="100%"
             borderRadius="lg"
             overflowY="hidden"
           >
-            {loading ? (
-              <Spinner
-                size="xl"
-                w={20}
-                h={20}
-                alignSelf="center"
-                margin="auto"
+            {messages && <ScrollableChat messages={messages} />}
+            <FormControl
+              onKeyDown={handleKeyPress}
+              id="first-name"
+              isRequired
+              mt={3}
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <Input
+                variant="filled"
+                bg="#E0E0E0"
+                placeholder="Mesaj yazın..."
+                value={newMessage}
+                onChange={typingHandler}
+                borderRadius="none"
               />
-            ) : (
-              <div className="messages">
-                <ScrollableChat messages={messages} />
-              </div>
-            )}
-
-            <FormControl id="first-name" isRequired mt={3}>
-              {isTyping ? (
-                <div>
-                  <Lottie
-                    options={defaultOptions}
-                    width={70}
-                    style={{ marginBottom: 15, marginLeft: 0 }}
-                  />
-                </div>
-              ) : (
-                <></>
-              )}
-              <HStack>
-                <Input
-                  variant="filled"
-                  bg="#E0E0E0"
-                  placeholder="Bir mesaj yazın"
-                  value={newMessage}
-                  onChange={typingHandler}
-                  onKeyDown={handleKeyPress}
-                  autoComplete="off"
-                />
-                <IconButton
-                  icon={<MdSend />}
-                  onClick={sendMessage}
-                  colorScheme="blue"
-                  aria-label="Send Message"
-                  isLoading={loading}
-                />
-              </HStack>
+              <IconButton
+                icon={<MdSend />}
+                colorScheme="blue"
+                ml={2}
+                onClick={sendMessage}
+              />
             </FormControl>
           </Box>
         </>
@@ -420,7 +417,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
           h="100%"
         >
           <Text fontSize="3xl" pb={3} fontFamily="Work sans">
-            Uçtan uca şifrelenmiş
+            Uçtan Uca Şifrelenmiş
           </Text>
         </Box>
       )}
