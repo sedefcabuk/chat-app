@@ -3,7 +3,7 @@ import { Input } from "@chakra-ui/input";
 import { Box, Text, HStack } from "@chakra-ui/layout";
 import { IconButton, Spinner, useToast } from "@chakra-ui/react";
 import { getSender, getSenderFull } from "../config/ChatLogics";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { ArrowBackIcon } from "@chakra-ui/icons";
 import ProfileModal from "./miscellaneous/ProfileModal";
@@ -25,12 +25,13 @@ let socket, selectedChatCompare;
 
 const SingleChat = ({ fetchAgain, setFetchAgain }) => {
   const [messages, setMessages] = useState([]);
-  // const [loading, setLoading] = useState(false);  // loading kaldırıldı
+  const [loading, setLoading] = useState(false); // loading state'i geri eklendi
   const [newMessage, setNewMessage] = useState("");
   const [socketConnected, setSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const toast = useToast();
+  const messagesEndRef = useRef(null); // Mesajların sonuna kaydırmak için ref
 
   const { selectedChat, setSelectedChat, user, notification, setNotification } =
     ChatState();
@@ -42,6 +43,11 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
     rendererSettings: {
       preserveAspectRatio: "xMidYMid slice",
     },
+  };
+
+  // Mesajların sonuna kaydırma fonksiyonu
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const getReceiverIndex = (chat, userId, senderId) => {
@@ -76,8 +82,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         },
         withCredentials: true,
       };
+      setMessages([]);
 
-      // setLoading(true);  // kaldırıldı
+      //setLoading(true); // Yükleme başlıyor
 
       const { data } = await axios.get(
         `/api/message/${selectedChat._id}`,
@@ -118,9 +125,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         })
       );
       setMessages(decryptedMessages);
-      // setLoading(false);  // kaldırıldı
-
+      //setLoading(false); // Yükleme bitti
       socket.emit("join chat", selectedChat._id);
+      scrollToBottom(); // Mesajlar yüklendiğinde en alta kaydır
     } catch (error) {
       toast({
         title: "Hata!",
@@ -131,6 +138,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         isClosable: true,
         position: "bottom",
       });
+      //setLoading(false); // Hata durumunda yükleme bitti
     }
   };
 
@@ -153,7 +161,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         throw new Error("Hiçbir alıcı için geçerli açık anahtar bulunamadı.");
       }
 
-      // setLoading(true);  // kaldırıldı
+      //setLoading(true); // Yükleme başlıyor
       const content = await encryptMessage(newMessage, publicKeys);
       setNewMessage("");
 
@@ -176,8 +184,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
       });
 
       socket.emit("new message", data);
+      scrollToBottom(); // Yeni mesaj gönderildiğinde en alta kaydır
     } catch (error) {
-      let errorMessage = "Mesaj gönderilemedi.";
+      let errorMessage = "Mesaj gönderilemedi: Bilinmeyen hata";
       if (error.response?.status === 403) {
         errorMessage =
           "Bu grupta artık üye olmadığınız için mesaj gönderemezsiniz.";
@@ -195,7 +204,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         position: "bottom",
       });
     } finally {
-      // setLoading(false);  // kaldırıldı
+      setLoading(false); // Yükleme bitti
     }
   };
 
@@ -279,6 +288,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               }
               return prev;
             });
+            scrollToBottom(); // Yeni mesaj alındığında en alta kaydır
             return;
           }
           let payload;
@@ -292,6 +302,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               }
               return prev;
             });
+            scrollToBottom(); // Yeni mesaj alındığında en alta kaydır
             return;
           }
           if (
@@ -306,6 +317,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
               }
               return prev;
             });
+            scrollToBottom(); // Yeni mesaj alındığında en alta kaydır
             return;
           }
           newMessageReceived.content = await decryptMessage(
@@ -318,6 +330,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             }
             return prev;
           });
+          scrollToBottom(); // Yeni mesaj alındığında en alta kaydır
         } catch (error) {
           newMessageReceived.content =
             "[Mesaj çözülemedi: Anahtar uyumsuzluğu]";
@@ -327,6 +340,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             }
             return prev;
           });
+          scrollToBottom(); // Yeni mesaj alındığında en alta kaydır
           console.error("Mesaj çözme hatası:", error);
         }
       }
@@ -376,36 +390,55 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             flexDir="column"
             justifyContent="flex-end"
             p={3}
-            bg="#E8E8E8"
+            bg="#F3F7FFFF" // Eski kodun arka plan rengi
             w="100%"
             h="100%"
             borderRadius="lg"
-            overflowY="hidden"
+            overflowY="hidden" // Eski kodun overflow ayarı
           >
-            {messages && <ScrollableChat messages={messages} />}
-            <FormControl
-              onKeyDown={handleKeyPress}
-              id="first-name"
-              isRequired
-              mt={3}
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Input
-                variant="filled"
-                bg="#E0E0E0"
-                placeholder="Mesaj yazın..."
-                value={newMessage}
-                onChange={typingHandler}
-                borderRadius="none"
+            {loading ? (
+              <Spinner
+                size="xl"
+                w={20}
+                h={20}
+                alignSelf="center"
+                margin="auto"
               />
-              <IconButton
-                icon={<MdSend />}
-                colorScheme="blue"
-                ml={2}
-                onClick={sendMessage}
-              />
+            ) : (
+              <div className="messages">
+                <ScrollableChat messages={messages} />
+                <div ref={messagesEndRef} /> {/* Mesajların sonuna referans */}
+              </div>
+            )}
+            <FormControl id="first-name" isRequired mt={3}>
+              {isTyping ? (
+                <div>
+                  <Lottie
+                    options={defaultOptions}
+                    width={70}
+                    style={{ marginBottom: 15, marginLeft: 0 }}
+                  />
+                </div>
+              ) : (
+                <></>
+              )}
+              <HStack>
+                <Input
+                  variant="filled"
+                  bg="#E0E0E0"
+                  placeholder="Bir mesaj yazın"
+                  value={newMessage}
+                  onChange={typingHandler}
+                  onKeyDown={handleKeyPress}
+                  autoComplete="off"
+                />
+                <IconButton
+                  icon={<MdSend />}
+                  onClick={sendMessage}
+                  colorScheme="blue"
+                  aria-label="Send Message"
+                />
+              </HStack>
             </FormControl>
           </Box>
         </>
