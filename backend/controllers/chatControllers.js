@@ -176,29 +176,44 @@ const removeFromGroup = asyncHandler(async (req, res) => {
 // @desc    Add user to Group / Leave
 // @route   PUT /api/chat/groupadd
 // @access  Protected
+// @desc    Add user to Group / Leave
+// @route   PUT /api/chat/groupadd
+// @access  Protected
 const addToGroup = asyncHandler(async (req, res) => {
   const { chatId, userId } = req.body;
 
   const chat = await Chat.findById(chatId);
+
   if (!chat) {
     res.status(404);
     throw new Error("Chat Not Found");
   }
 
+  // Kullanıcı grupta değilse ve eklemeye çalışan kullanıcı yetkiliyse devam et
   if (!chat.users.includes(req.user._id)) {
     res.status(403);
     throw new Error("You are not a member of this group.");
   }
 
-  const added = await Chat.findByIdAndUpdate(
+  // Zaten gruptaysa tekrar ekleme
+  if (chat.users.includes(userId)) {
+    return res.status(400).json({ message: "User is already in the group." });
+  }
+
+  const now = new Date();
+
+  const updatedChat = await Chat.findByIdAndUpdate(
     chatId,
-    { $push: { users: userId } },
+    {
+      $push: { users: userId },
+      $set: { [`userJoinTimes.${userId}`]: now },
+    },
     { new: true }
   )
     .populate("users", "-password")
     .populate("groupAdmin", "-password");
 
-  res.json(added);
+  res.json(updatedChat);
 });
 
 module.exports = {

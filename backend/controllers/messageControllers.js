@@ -11,6 +11,9 @@ dotenv.config();
 //@description     Get all Messages
 //@route           GET /api/Message/:chatId
 //@access          Protected
+//@description     Get all Messages
+//@route           GET /api/Message/:chatId
+//@access          Protected
 const allMessages = asyncHandler(async (req, res) => {
   try {
     const chat = await Chat.findById(req.params.chatId);
@@ -19,12 +22,26 @@ const allMessages = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: "Chat not found" });
     }
 
-    const removedTime = chat.removedUsers?.get(req.user._id.toString());
+    const userId = req.user._id.toString();
+
+    const removedTime = chat.removedUsers?.get(userId);
+    const joinedTime = chat.userJoinTimes?.get(userId);
 
     let messageQuery = { chat: req.params.chatId };
 
+    // Kullanıcı çıkarıldıysa, sadece çıkarılmadan önceki mesajları görsün
     if (removedTime) {
       messageQuery.createdAt = { $lt: removedTime };
+    }
+
+    // Gruba giriş tarihi varsa (yeni eklenmişse), sadece o andan sonraki mesajları görsün
+    if (joinedTime) {
+      messageQuery.createdAt = messageQuery.createdAt
+        ? {
+            $gte: joinedTime,
+            $lt: removedTime || new Date(), // hem eklenme hem çıkarılma varsa aralık tanımlanır
+          }
+        : { $gte: joinedTime };
     }
 
     const messages = await Message.find(messageQuery)

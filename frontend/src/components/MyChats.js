@@ -34,47 +34,45 @@ const MyChats = ({ fetchAgain }) => {
       };
       const { data } = await axios.get("/api/chat", config);
 
-      // Son mesajları paralel olarak çöz
       const decryptedChats = await Promise.all(
         data.map(async (chat) => {
           if (chat.latestMessage) {
             let content = chat.latestMessage.content;
-            // Eski [String] formatıyla uyumluluk
+
             if (Array.isArray(content)) {
               content = content[0] || "";
             }
+
             const receiverIndex = getReceiverIndex(
               chat,
               user._id,
               chat.latestMessage.sender._id
             );
+
             try {
-              // JSON formatını doğrula
               let payload;
               try {
                 payload = JSON.parse(content);
               } catch {
-                chat.latestMessage.content =
-                  "[Mesaj çözülemedi: Geçersiz format]";
+                // JSON formatı bozuksa: mesaj gösterme
+                chat.latestMessage = null;
                 return chat;
               }
-              // Alıcı indeksini doğrula
+
               if (
                 receiverIndex < 0 ||
                 receiverIndex >= payload.encryptedAesKeys.length
               ) {
-                chat.latestMessage.content =
-                  "[Mesaj çözülemedi: Geçersiz alıcı indeksi]";
+                // Alıcı için uygun değilse mesaj gösterme
+                chat.latestMessage = null;
                 return chat;
               }
-              chat.latestMessage.content = await decryptMessage(
-                content,
-                receiverIndex
-              );
+
+              const decrypted = await decryptMessage(content, receiverIndex);
+              chat.latestMessage.content = decrypted;
             } catch (error) {
-              console.error("Mesaj çözme hatası:", error);
-              chat.latestMessage.content =
-                "[Mesaj çözülemedi: Anahtar uyumsuzluğu]";
+              // Anahtar uyumsuzluğu veya diğer hata varsa: mesaj gösterme
+              chat.latestMessage = null;
             }
           }
           return chat;
@@ -154,6 +152,7 @@ const MyChats = ({ fetchAgain }) => {
           </Button>
         </GroupChatModal>
       </Box>
+
       <Box
         display="flex"
         flexDir="column"
@@ -172,7 +171,7 @@ const MyChats = ({ fetchAgain }) => {
                 onClick={() => setSelectedChat(chat)}
                 cursor="pointer"
                 bg={selectedChat === chat ? "blue.100" : "#E8E8E8"}
-                color={selectedChat === chat ? "black" : "black"}
+                color="black"
                 px={3}
                 py={2}
                 borderRadius="lg"
