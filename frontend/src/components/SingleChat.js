@@ -173,8 +173,14 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         },
         config
       );
+      console.log("Backend yanıtı:", { status: data.status, data });
 
-      data.content = await decryptMessage(data.content, 0);
+      const receiverIndex = getReceiverIndex(
+        selectedChat,
+        user._id,
+        data.sender._id
+      );
+      data.content = await decryptMessage(data.content, receiverIndex);
 
       setMessages((prevMessages) => {
         if (!prevMessages.some((msg) => msg._id === data._id)) {
