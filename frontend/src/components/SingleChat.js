@@ -173,7 +173,6 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         },
         config
       );
-      console.log("Backend yanıtı:", { status: data.status, data });
 
       const receiverIndex = getReceiverIndex(
         selectedChat,

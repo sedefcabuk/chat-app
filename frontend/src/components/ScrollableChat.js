@@ -9,8 +9,36 @@ import {
 } from "../config/ChatLogics";
 import { ChatState } from "../Context/ChatProvider";
 
+// Sabit renk havuzu (sıraya göre atanacak)
+const userColors = [
+  "#E53E3E", // kırmızı
+  "#3182CE", // mavi
+  "#38A169", // yeşil
+  "#D69E2E", // sarı
+  "#805AD5", // mor
+  "#DD6B20", // turuncu
+  "#319795", // teal
+  "#718096", // gri
+];
+
+// Her kullanıcıya sabit bir renk atamak için
+const generateColorMap = (messages) => {
+  const userIdSet = new Set();
+  messages.forEach((msg) => userIdSet.add(msg.sender._id));
+  const userIds = Array.from(userIdSet);
+
+  const colorMap = {};
+  userIds.forEach((id, index) => {
+    colorMap[id] = userColors[index % userColors.length];
+  });
+
+  return colorMap;
+};
+
 const ScrollableChat = ({ messages }) => {
-  const { user } = ChatState();
+  const { user, selectedChat } = ChatState();
+
+  const colorMap = generateColorMap(messages);
 
   return (
     <ScrollableFeed>
@@ -22,6 +50,10 @@ const ScrollableChat = ({ messages }) => {
           });
 
           const isUserMessage = m.sender._id === user._id;
+          const showSenderName =
+            selectedChat.isGroupChat &&
+            (isSameSender(messages, m, i, user._id) ||
+              isLastMessage(messages, i, user._id));
 
           return (
             <div
@@ -59,6 +91,7 @@ const ScrollableChat = ({ messages }) => {
                       />
                     </Tooltip>
                   )}
+
                 <div
                   style={{
                     backgroundColor: isUserMessage ? "#BEE3F8" : "#B9F5D0",
@@ -68,19 +101,30 @@ const ScrollableChat = ({ messages }) => {
                     padding: "10px 15px",
                     maxWidth: "75%",
                     display: "flex",
-                    alignItems: "flex-start",
-                    wordBreak: "break-word",
+                    flexDirection: "column",
                     position: "relative",
-                    height: "auto",
+                    wordBreak: "break-word",
                   }}
                 >
-                  <span style={{ flex: 1, paddingBottom: "5px" }}>
-                    {m.content}
-                  </span>
+                  {showSenderName && (
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "bold",
+                        marginBottom: "3px",
+                        color: colorMap[m.sender._id],
+                      }}
+                    >
+                      {m.sender.name}
+                    </span>
+                  )}
+
+                  <span>{m.content}</span>
+
                   <span
                     style={{
                       position: "absolute",
-                      bottom: "1px",
+                      bottom: "2px",
                       right: "5px",
                       fontSize: "10px",
                       color: "gray",
