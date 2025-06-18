@@ -15,6 +15,7 @@ import UpdateGroupChatModal from "./miscellaneous/UpdateGroupChatModal";
 import { ChatState } from "../Context/ChatProvider";
 import { MdSend } from "react-icons/md";
 import { encryptMessage, decryptMessage } from "../utils";
+import { Flex } from "@chakra-ui/react";
 
 const ENDPOINT =
   process.env.NODE_ENV === "production"
@@ -125,9 +126,9 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         })
       );
       setMessages(decryptedMessages);
-      //setLoading(false); // Yükleme bitti
+      //setLoading(false);
       socket.emit("join chat", selectedChat._id);
-      scrollToBottom(); // Mesajlar yüklendiğinde en alta kaydır
+      scrollToBottom();
     } catch (error) {
       toast({
         title: "Hata!",
@@ -138,7 +139,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
         isClosable: true,
         position: "bottom",
       });
-      //setLoading(false); // Hata durumunda yükleme bitti
+      //setLoading(false);
     }
   };
 
@@ -368,6 +369,7 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             display="flex"
             justifyContent={{ base: "space-between" }}
             alignItems="center"
+            gap={2}
           >
             <IconButton
               display={{ base: "flex", md: "none" }}
@@ -376,17 +378,23 @@ const SingleChat = ({ fetchAgain, setFetchAgain }) => {
             />
             {!selectedChat.isGroupChat ? (
               <>
-                {getSender(user, selectedChat.users)}
-                <ProfileModal user={getSenderFull(user, selectedChat.users)} />
+                <Flex align="center" gap={2}>
+                  {getSender(user, selectedChat.users)}
+                  <ProfileModal
+                    user={getSenderFull(user, selectedChat.users)}
+                  />
+                </Flex>
               </>
             ) : (
               <>
-                {selectedChat.chatName.toUpperCase()}
-                <UpdateGroupChatModal
-                  fetchMessages={fetchMessages}
-                  fetchAgain={fetchAgain}
-                  setFetchAgain={setFetchAgain}
-                />
+                <Flex align="center" gap={2}>
+                  {selectedChat.chatName.toUpperCase()}
+                  <UpdateGroupChatModal
+                    fetchMessages={fetchMessages}
+                    fetchAgain={fetchAgain}
+                    setFetchAgain={setFetchAgain}
+                  />
+                </Flex>
               </>
             )}
           </Text>

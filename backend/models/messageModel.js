@@ -9,7 +9,7 @@ const messageSchema = mongoose.Schema(
     },
     content: {
       type: String,
-      required: true, // AES ile şifrelenmiş mesaj içeriği (JSON string)
+      required: true,
     },
     chat: {
       type: mongoose.Schema.Types.ObjectId,

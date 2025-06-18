@@ -1,4 +1,4 @@
-import { ViewIcon } from "@chakra-ui/icons";
+import { InfoIcon } from "@chakra-ui/icons";
 import {
   Modal,
   ModalOverlay,
@@ -214,8 +214,10 @@ const UpdateGroupChatModal = ({ fetchMessages, fetchAgain, setFetchAgain }) => {
     <>
       <IconButton
         display={{ base: "flex" }}
-        icon={<ViewIcon />}
+        icon={<InfoIcon />}
         onClick={onOpen}
+        borderRadius="12px"
+        size="xs"
       />
 
       <Modal onClose={onClose} isOpen={isOpen} isCentered>

@@ -1,5 +1,12 @@
 import { AddIcon } from "@chakra-ui/icons";
-import { Box, Stack, Text, Button } from "@chakra-ui/react";
+import {
+  Box,
+  Stack,
+  Text,
+  Button,
+  Avatar,
+  AvatarGroup,
+} from "@chakra-ui/react";
 import { useToast } from "@chakra-ui/toast";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -22,16 +29,21 @@ const MyChats = ({ fetchAgain }) => {
     return senderId === userId ? 0 : 1;
   };
 
-  const fetchChats = async () => {
-    if (!user?.token) {
-      console.log("Token bulunamadı, chatler yüklenmedi.");
-      return;
+  const getChatAvatars = (chat) => {
+    if (!chat.isGroupChat) {
+      const otherUser = chat.users.find((u) => u._id !== loggedUser?._id);
+      return [otherUser?.pic];
+    } else {
+      const filteredUsers = chat.users.filter((u) => u._id !== loggedUser?._id);
+      return filteredUsers.slice(0, 3).map((u) => u.pic);
     }
+  };
+
+  const fetchChats = async () => {
+    if (!user?.token) return;
 
     try {
-      const config = {
-        headers: { Authorization: `Bearer ${user.token}` },
-      };
+      const config = { headers: { Authorization: `Bearer ${user.token}` } };
       const { data } = await axios.get("/api/chat", config);
 
       const decryptedChats = await Promise.all(
@@ -54,7 +66,6 @@ const MyChats = ({ fetchAgain }) => {
               try {
                 payload = JSON.parse(content);
               } catch {
-                // JSON formatı bozuksa: mesaj gösterme
                 chat.latestMessage = null;
                 return chat;
               }
@@ -63,15 +74,13 @@ const MyChats = ({ fetchAgain }) => {
                 receiverIndex < 0 ||
                 receiverIndex >= payload.encryptedAesKeys.length
               ) {
-                // Alıcı için uygun değilse mesaj gösterme
                 chat.latestMessage = null;
                 return chat;
               }
 
               const decrypted = await decryptMessage(content, receiverIndex);
               chat.latestMessage.content = decrypted;
-            } catch (error) {
-              // Anahtar uyumsuzluğu veya diğer hata varsa: mesaj gösterme
+            } catch {
               chat.latestMessage = null;
             }
           }
@@ -81,12 +90,9 @@ const MyChats = ({ fetchAgain }) => {
 
       setChats(decryptedChats);
     } catch (error) {
-      console.error("Chatleri çekerken hata oluştu:", error);
       toast({
         title: "Hata!",
-        description: `Sohbetleri yüklerken hata oluştu: ${
-          error.message || "Bilinmeyen hata"
-        }`,
+        description: "Sohbetleri yüklerken bir hata oluştu.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -98,24 +104,9 @@ const MyChats = ({ fetchAgain }) => {
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem("userInfo"));
     setLoggedUser(storedUser);
+    if (!storedUser) return;
 
-    if (!storedUser) {
-      toast({
-        title: "Hata!",
-        description: "Kullanıcı bilgileri bulunamadı.",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-        position: "bottom-left",
-      });
-      return;
-    }
-
-    if (!user) {
-      console.log("User state güncellenmedi, bekleniyor...");
-      return;
-    }
-
+    if (!user) return;
     fetchChats();
   }, [fetchAgain, user]);
 
@@ -166,37 +157,56 @@ const MyChats = ({ fetchAgain }) => {
       >
         {chats ? (
           <Stack overflowY="scroll">
-            {chats.map((chat) => (
-              <Box
-                onClick={() => setSelectedChat(chat)}
-                cursor="pointer"
-                bg={selectedChat === chat ? "blue.100" : "#E8E8E8"}
-                color="black"
-                px={3}
-                py={2}
-                borderRadius="lg"
-                key={chat._id}
-              >
-                <Text>
-                  {!chat.isGroupChat
-                    ? getSender(loggedUser, chat.users)
-                    : chat.chatName}
-                </Text>
-                {chat.latestMessage && (
-                  <Text fontSize="xs">
-                    <b>
-                      {chat.latestMessage.sender.name === loggedUser?.name
-                        ? "Siz"
-                        : chat.latestMessage.sender.name}
-                      :
-                    </b>{" "}
-                    {chat.latestMessage.content.length > 50
-                      ? chat.latestMessage.content.substring(0, 51) + "..."
-                      : chat.latestMessage.content}
-                  </Text>
-                )}
-              </Box>
-            ))}
+            {chats.map((chat) => {
+              const avatars = getChatAvatars(chat);
+
+              return (
+                <Box
+                  onClick={() => setSelectedChat(chat)}
+                  cursor="pointer"
+                  bg={selectedChat === chat ? "blue.100" : "#E8E8E8"}
+                  color="black"
+                  px={3}
+                  py={2}
+                  borderRadius="lg"
+                  key={chat._id}
+                  display="flex"
+                  alignItems="center"
+                  gap={3}
+                >
+                  {chat.isGroupChat ? (
+                    <AvatarGroup size="sm" max={2}>
+                      {avatars.map((pic, i) => (
+                        <Avatar key={i} src={pic} />
+                      ))}
+                    </AvatarGroup>
+                  ) : (
+                    <Avatar src={avatars[0]} size="sm" />
+                  )}
+
+                  <Box>
+                    <Text>
+                      {!chat.isGroupChat
+                        ? getSender(loggedUser, chat.users)
+                        : chat.chatName}
+                    </Text>
+                    {chat.latestMessage && (
+                      <Text fontSize="xs">
+                        <b>
+                          {chat.latestMessage.sender.name === loggedUser?.name
+                            ? "Siz"
+                            : chat.latestMessage.sender.name}
+                          :
+                        </b>{" "}
+                        {chat.latestMessage.content.length > 50
+                          ? chat.latestMessage.content.substring(0, 51) + "..."
+                          : chat.latestMessage.content}
+                      </Text>
+                    )}
+                  </Box>
+                </Box>
+              );
+            })}
           </Stack>
         ) : (
           <ChatLoading />
